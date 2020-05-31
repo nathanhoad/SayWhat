@@ -1,0 +1,11 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# App
+node_modules
+*.log
+**/renderer/.next
+**/renderer/out
+**/dist
+**/coverage

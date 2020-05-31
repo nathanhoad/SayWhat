@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ApplicationLayout renders 1`] = `
+<div
+  data-testid="drawer"
+/>
+`;

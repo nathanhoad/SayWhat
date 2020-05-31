@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Panel renders 1`] = `
+<div
+  class="jsx-3358665321 Panel"
+>
+  PanelContent
+</div>
+`;

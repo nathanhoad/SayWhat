@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Connection can render downward outgoing connections 1`] = `
+<div
+  class="jsx-750905153 Connection"
+  style="top: 48px; height: 104px; width: 30px;"
+>
+  <div
+    class="jsx-750905153 Line"
+  />
+  <div
+    class="jsx-750905153 End"
+    style="top: 102.5px;"
+  />
+</div>
+`;
+
+exports[`Connection can render incoming connections 1`] = `
+<div
+  class="jsx-750905153 Connection In"
+  style="top: 50px; height: 300px; width: 30px;"
+>
+  <div
+    class="jsx-750905153 Line"
+  />
+  <div
+    class="jsx-750905153 End"
+    style="top: 1.5px;"
+  />
+</div>
+`;
+
+exports[`Connection can render upward outgoing connections 1`] = `
+<div
+  class="jsx-750905153 Connection"
+  style="top: 50px; height: 300px; width: 60px;"
+>
+  <div
+    class="jsx-750905153 Line"
+  />
+  <div
+    class="jsx-750905153 End"
+    style="top: 1.5px;"
+  />
+</div>
+`;
+
+exports[`Connection renders nothing if there is no toElement 1`] = `null`;
