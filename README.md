@@ -2,7 +2,7 @@
 
 A simple branching dialogue editor.
 
-Get a prebuilt copy from [nathanhoad.itch.io/saywhat](https://nathanhoad.itch.io/saywaht).
+Get a prebuilt copy from [nathanhoad.itch.io/saywhat](https://nathanhoad.itch.io/saywhat).
 
 ## Sequences
 
