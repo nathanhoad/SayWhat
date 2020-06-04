@@ -15,9 +15,8 @@ export function projectToXml(project: IProject): string {
           let entryPoint = node.name;
 
           const lines = node.lines
+            .filter(l => l.dialogue !== "")
             .map((line, index, arr) => {
-              if (line.dialogue === "") return null;
-
               const type = line.mutation ? "mutation" : "dialogue";
               const nextNodeId = index === arr.length - 1 ? node.options[0]?.id || "" : arr[index + 1].id;
               const children =
@@ -36,7 +35,6 @@ export function projectToXml(project: IProject): string {
 
               return `<node id="${id}" type="${type}">${children}</node>`;
             })
-            .filter(l => l)
             .join("");
 
           let options = "";
@@ -101,20 +99,20 @@ export function projectToJson(project: IProject): string {
           sequence.nodes.reduce((nodes, node) => {
             let entryPoint = node.name;
 
-            node.lines.forEach((line, index, arr) => {
-              if (line.dialogue === "") return null;
+            node.lines
+              .filter(l => l.dialogue !== "")
+              .forEach((line, index, arr) => {
+                const exportedNode: IExportedNode = line;
 
-              const exportedNode: IExportedNode = line;
+                if (entryPoint) {
+                  exportedNode.id = entryPoint;
+                  entryPoint = null;
+                }
 
-              if (entryPoint) {
-                exportedNode.id = entryPoint;
-                entryPoint = null;
-              }
-
-              exportedNode.type = exportedNode.mutation ? "mutation" : "dialogue";
-              exportedNode.nextNodeId = index === arr.length - 1 ? node.options[0]?.id || "" : arr[index + 1].id;
-              nodes = nodes.concat(exportedNode);
-            });
+                exportedNode.type = exportedNode.mutation ? "mutation" : "dialogue";
+                exportedNode.nextNodeId = index === arr.length - 1 ? node.options[0]?.id || "" : arr[index + 1].id;
+                nodes = nodes.concat(exportedNode);
+              });
 
             if (node.options.length > 0) {
               const options: IExportedNode = {
