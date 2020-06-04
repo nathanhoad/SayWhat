@@ -20,7 +20,8 @@ const emitter = new EventEmitter();
 let window: BrowserWindow;
 export default function initState(win: BrowserWindow, filename?: string) {
   window = win;
-  if (filename) {
+
+  if (filename?.endsWith(".saywhat")) {
     setFilename(filename);
     setProject(FS.readJsonSync(filename));
     setHasUnsavedChanges(false);
