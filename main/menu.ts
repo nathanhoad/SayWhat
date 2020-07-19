@@ -150,7 +150,7 @@ export default function initMenu(window: BrowserWindow) {
       label: "Export",
       submenu: [
         {
-          label: "As XML...",
+          label: "As XML + Resx...",
           click() {
             exportProjectAsXml();
           }

@@ -2,9 +2,11 @@ import { keyBy } from "../renderer/lib/util";
 
 import { INode, ISequence, IProject, INodeLine } from "../types";
 
+const XML_DEC = '<?xml version="1.0" encoding="UTF-8"?>\n';
+
 /**
  * Convert a list of nodes to XML
- * @param nodes
+ * @param project
  */
 export function projectToXml(project: IProject): string {
   const xml = project.sequences
@@ -66,9 +68,65 @@ export function projectToXml(project: IProject): string {
     })
     .join("");
 
-  const XML_DEC = '<?xml version="1.0" encoding="UTF-8"?>\n';
-
   return `${XML_DEC}\n<sequences>${xml}</sequences>`;
+}
+
+interface IResXData {
+  name: string;
+  value: string;
+  comment: string;
+}
+
+/**
+ * Extract all printable text into translatable lines
+ * @param project
+ */
+export function projectToResx(project: IProject) {
+  const characterNames: Array<string> = [];
+
+  const data: Array<IResXData> = project.sequences.reduce((strings: Array<IResXData>, sequence) => {
+    sequence.nodes.forEach(node => {
+      node.lines.forEach(line => {
+        if (line.character && !characterNames.includes(line.character)) {
+          characterNames.push(line.character);
+          strings = strings.concat({
+            name: line.character,
+            value: line.character,
+            comment: "Character name"
+          });
+        }
+
+        if (line.dialogue) {
+          strings = strings.concat({
+            name: line.id,
+            value: line.dialogue,
+            comment: `${sequence.name} (${sequence.id}/${node.id})`
+          });
+        }
+      });
+    });
+
+    return strings;
+  }, []);
+
+  return `${XML_DEC}\n
+    <root>
+      <resheader name="resmimetype">
+          <value>text/microsoft-resx</value>
+      </resheader>
+      <resheader name="version">
+          <value>2.0</value>
+      </resheader>
+      <resheader name="reader">
+          <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+      </resheader>
+      <resheader name="writer">
+          <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+      </resheader>
+      ${data
+        .map(d => `<data name="${d.name}"><value>${d.value}</value><comment>${d.comment}</comment></data>\n`)
+        .join("")}
+    </root>`;
 }
 
 interface IExportedNode {

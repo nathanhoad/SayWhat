@@ -11,7 +11,7 @@ import {
   setLastExportFilename,
   ask
 } from "./state";
-import { projectToXml, projectToJson } from "./export";
+import { projectToXml, projectToJson, projectToResx } from "./export";
 
 export async function newProject() {
   if (await promptToSaveIfNeededWasCancelled()) return;
@@ -102,6 +102,10 @@ export function exportProjectAsXml() {
     FS.writeFileSync(filename, projectToXml(getState().project));
     setLastExportFilename(filename);
     shell.showItemInFolder(filename);
+
+    const resXFilename = filename.replace(".xml", ".resx");
+    FS.mkdirpSync(Path.dirname(resXFilename));
+    FS.writeFileSync(resXFilename, projectToResx(getState().project));
   }
 }
 
