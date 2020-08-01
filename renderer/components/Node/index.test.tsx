@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, queryByTestId } from "@testing-library/react";
+import { render, fireEvent } from "@testing-library/react";
 
 import Node from ".";
 import { INode } from "../../../types";
@@ -44,6 +44,14 @@ jest.mock("../Button", () => {
       {children}
     </button>
   );
+});
+
+const mockCopyToClipboard = jest.fn();
+jest.mock("../../lib/util", () => {
+  return {
+    copyToClipboard: (s: string) => mockCopyToClipboard(s),
+    keyBy: jest.requireActual("../../lib/util").keyBy
+  };
 });
 
 describe("Node", () => {
@@ -244,5 +252,36 @@ describe("Node", () => {
     fireEvent.click(queryByTestId("delete-button"));
 
     expect(mockRemoveNode).toHaveBeenCalled();
+  });
+
+  describe("node id", () => {
+    const realSetTimeout = window.setTimeout;
+
+    beforeEach(() => {
+      window.setTimeout = realSetTimeout;
+    });
+
+    afterEach(() => {
+      window.setTimeout = realSetTimeout;
+    });
+
+    it("can copy the node ID to the clipboard", () => {
+      expect.hasAssertions();
+
+      const node: INode = {
+        id: "nodeId",
+        name: "Node name",
+        updatedAt: new Date(),
+        lines: [],
+        options: []
+      };
+
+      Object.defineProperty(window, "setTimeout", { value: (cb: Function, milliseconds: number) => cb() });
+
+      const { queryByTestId } = render(<Node node={node} />);
+      fireEvent.click(queryByTestId("copy-to-clipboard-button"));
+
+      expect(mockCopyToClipboard).toHaveBeenCalledWith("nodeId");
+    });
   });
 });

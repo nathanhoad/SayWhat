@@ -14,7 +14,7 @@ export function projectToXml(project: IProject): string {
       const nodesById = keyBy("id", sequence.nodes);
       const sequenceXml = sequence.nodes
         .map(node => {
-          let entryPoint = node.name;
+          let entryPoint = node.id;
 
           const lines = node.lines
             .filter(l => l.dialogue !== "")
@@ -47,7 +47,7 @@ export function projectToXml(project: IProject): string {
                     ${node.options
                       .map(option => {
                         const nextNode = nodesById[option.nextNodeId];
-                        const nextNodeId = nextNode ? nextNode.name : "";
+                        const nextNodeId = nextNode ? nextNode.id : "";
                         return `<option 
                                   ${option.condition ? `if="${option.condition}"` : ""} 
                                   nextNodeId="${nextNodeId}">
@@ -64,7 +64,7 @@ export function projectToXml(project: IProject): string {
         })
         .join("");
 
-      return `<sequence id="${sequence.name}">${sequenceXml}</sequence>`;
+      return `<sequence id="${sequence.id}">${sequenceXml}</sequence>`;
     })
     .join("");
 
@@ -100,7 +100,7 @@ export function projectToResx(project: IProject) {
           strings = strings.concat({
             name: line.id,
             value: line.dialogue,
-            comment: `${sequence.name} (${sequence.id}/${node.id})`
+            comment: `${sequence.name} (${sequence.id} / ${node.id})`
           });
         }
       });
@@ -151,11 +151,11 @@ export function projectToJson(project: IProject): string {
       const nodesById = keyBy("id", sequence.nodes);
 
       return {
-        id: sequence.name,
+        id: sequence.id,
         nodes: keyBy(
           "id",
           sequence.nodes.reduce((nodes, node) => {
-            let entryPoint = node.name;
+            let entryPoint = node.id;
 
             node.lines
               .filter(l => l.dialogue !== "")
@@ -181,7 +181,7 @@ export function projectToJson(project: IProject): string {
                   return {
                     condition: option.condition,
                     prompt: option.prompt,
-                    nextNodeId: nextNode ? nextNode.name : null
+                    nextNodeId: nextNode ? nextNode.id : null
                   };
                 })
               };

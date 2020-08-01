@@ -112,3 +112,14 @@ export function getNodesByOptionId(nodes: INode[]): { [id: string]: INode } {
 
   return list;
 }
+
+export function copyToClipboard(s: string) {
+  const input = document.createElement("input");
+  input.style.setProperty("position", "absolute");
+  input.style.setProperty("opacity", "0.01");
+  document.body.appendChild(input);
+  input.value = s;
+  input.select();
+  document.execCommand("copy");
+  document.body.removeChild(input);
+}

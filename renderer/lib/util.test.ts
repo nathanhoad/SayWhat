@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 
-import { keyBy, sortBy, findLinksToNode, plural, filterNodes, getNodesByOptionId } from "./util";
+import { keyBy, sortBy, findLinksToNode, plural, filterNodes, getNodesByOptionId, copyToClipboard } from "./util";
 import { INode } from "../../types";
 
 describe("plural", () => {
@@ -328,5 +328,27 @@ describe("getNodesByOptionId", () => {
     expect(byOptionId["option1"].id).toBe("node1");
     expect(byOptionId["option2"].id).toBe("node1");
     expect(byOptionId["option3"].id).toBe("node2");
+  });
+});
+
+describe("copyToClipboard", () => {
+  const realExec = document.execCommand;
+
+  beforeEach(() => {
+    document.execCommand = realExec;
+  });
+
+  it("copies a string to the clipboard", () => {
+    expect.hasAssertions();
+
+    const mockExec = jest.fn();
+    document.execCommand = mockExec;
+
+    const mockAlert = jest.fn();
+    window.alert = mockAlert;
+
+    copyToClipboard("test");
+
+    expect(mockExec).toHaveBeenCalledWith("copy");
   });
 });

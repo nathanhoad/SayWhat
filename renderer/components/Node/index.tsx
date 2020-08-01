@@ -8,6 +8,8 @@ import Button from "../Button";
 import Lines from "./Lines";
 import Options from "./Options";
 
+import { copyToClipboard } from "../../lib/util";
+
 import { INode } from "../../../types";
 
 interface Props {
@@ -19,6 +21,8 @@ export default function Node({ node, onClick }: Props) {
   const { selectedSequence, selectNode, selectedNode, updateNode, removeNode } = useApplication();
 
   const [isEditing, setIsEditing] = useState(node.updatedAt === null);
+
+  const [justCopied, setJustCopied] = useState(false);
 
   const [name, setName] = useState(node.name);
   const [linesText, setLinesText] = useState(linesToText(node.lines));
@@ -73,6 +77,12 @@ export default function Node({ node, onClick }: Props) {
     removeNode(node);
   }
 
+  function copyNodeId() {
+    copyToClipboard(node.id);
+    setJustCopied(true);
+    setTimeout(() => setJustCopied(false), 1500);
+  }
+
   return (
     <>
       <div className="Wrapper" data-node-id={node.id} onDoubleClick={() => setIsEditing(true)}>
@@ -82,7 +92,20 @@ export default function Node({ node, onClick }: Props) {
           onClick={() => onNodeClick()}
           data-testid="node">
           <header>
-            {!isEditing && <h2 data-testid="title">{name}</h2>}
+            {!isEditing && (
+              <>
+                <h2 data-testid="title">{name}</h2>{" "}
+                <span
+                  title="Copy to clipboard"
+                  role="button"
+                  onClick={() => copyNodeId()}
+                  data-copied="Copied!"
+                  className={justCopied ? "just-copied" : null}
+                  data-testid="copy-to-clipboard-button">
+                  {node.id}
+                </span>
+              </>
+            )}
             {isEditing && (
               <input
                 autoFocus
@@ -182,12 +205,38 @@ export default function Node({ node, onClick }: Props) {
           border-color: var(--color-line-dark);
         }
 
-        h2 {
+        header {
+          margin: 0 0 40px 0;
+        }
+
+        header input {
           font-size: 1.1rem;
           color: var(--color-node-name);
           font-weight: bold;
-          margin: 0 0 40px 0;
+        }
+
+        header h2 {
+          font-size: 1.1rem;
+          color: var(--color-node-name);
+          font-weight: bold;
           display: inline-block;
+        }
+
+        header span {
+          font-size: 11px;
+          color: var(--color-line-dark);
+          display: block;
+          line-height: 10px;
+          cursor: pointer;
+        }
+        header span:hover {
+          color: black;
+        }
+        header span.just-copied:after {
+          content: attr(data-copied);
+          color: var(--color-save-button-background);
+          font-weight: bold;
+          margin-left: 4px;
         }
 
         .Wrapper :global(input),
@@ -199,13 +248,6 @@ export default function Node({ node, onClick }: Props) {
           width: 100%;
           border: none;
           resize: none;
-        }
-
-        header input {
-          font-size: 1.1rem;
-          color: var(--color-node-name);
-          font-weight: bold;
-          margin: 0 0 40px 0;
         }
 
         hr {
