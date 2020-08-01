@@ -2,7 +2,7 @@
   "name": "saywhat",
   "productName": "SayWhat",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A simple branching dialogue editor",
   "main": "main/dist/main/index.js",
   "scripts": {
