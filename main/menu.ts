@@ -21,7 +21,8 @@ import {
   repeatLastExport,
   exportProjectAsXml,
   exportProjectAsJson,
-  promptToSaveIfNeededWasCancelled
+  promptToSaveIfNeededWasCancelled,
+  exportProjectAsTres
 } from "./file";
 
 export default function initMenu(window: BrowserWindow) {
@@ -149,6 +150,12 @@ export default function initMenu(window: BrowserWindow) {
       id: "export",
       label: "Export",
       submenu: [
+        {
+          label: "As Godot Resource...",
+          click() {
+            exportProjectAsTres();
+          }
+        },
         {
           label: "As XML + Resx...",
           click() {

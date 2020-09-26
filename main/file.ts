@@ -11,7 +11,7 @@ import {
   setLastExportFilename,
   ask
 } from "./state";
-import { projectToXml, projectToJson, projectToResx } from "./export";
+import { projectToTres, projectToXml, projectToJson, projectToResx } from "./export";
 
 export async function newProject() {
   if (await promptToSaveIfNeededWasCancelled()) return;
@@ -87,6 +87,22 @@ export function repeatLastExport() {
   }
 
   shell.showItemInFolder(filename);
+}
+
+export function exportProjectAsTres() {
+  const path = dialog.showSaveDialogSync({
+    title: "Save project",
+    buttonLabel: "Save project",
+    filters: [{ name: "Godot Resource files (*.tres)", extensions: ["tres"] }]
+  });
+
+  if (path) {
+    const filename = path + (Path.extname(path) !== ".tres" ? ".tres" : "");
+    FS.mkdirpSync(Path.dirname(filename));
+    FS.writeFileSync(filename, projectToTres(getState().project));
+    setLastExportFilename(filename);
+    shell.showItemInFolder(filename);
+  }
 }
 
 export function exportProjectAsXml() {

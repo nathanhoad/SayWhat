@@ -198,3 +198,80 @@ export function projectToJson(project: IProject): string {
 
   return JSON.stringify(exportedSequences);
 }
+
+interface IGodotLine {
+  id?: string;
+  type?: "dialogue" | "mutation" | "options";
+  next_node_id?: string;
+  condition?: string;
+  character?: string;
+  dialogue?: string;
+  mutation?: string;
+  options?: Array<{
+    condition?: string;
+    prompt?: string;
+    next_node_id?: string;
+  }>;
+}
+
+/**
+ * Export a project into a Godot Resource
+ * @param project
+ */
+export function projectToTres(project: IProject): string {
+  const list = keyBy("id", projectToExportNodesList(project));
+
+  return `[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://Text/DialogueResource.gd" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+lines = ${JSON.stringify(list)}`;
+}
+
+export function projectToExportNodesList(project: IProject): Array<IGodotLine> {
+  return project.sequences.reduce((list, sequence) => {
+    const nodesById = keyBy("id", sequence.nodes);
+
+    return list.concat(
+      sequence.nodes.reduce((nodes, node) => {
+        let entryPoint = node.id;
+
+        node.lines
+          .filter(l => l.dialogue !== "")
+          .forEach((line, index, arr) => {
+            const exportedNode: IGodotLine = line;
+
+            if (entryPoint) {
+              exportedNode.id = entryPoint;
+              entryPoint = null;
+            }
+
+            exportedNode.type = exportedNode.mutation ? "mutation" : "dialogue";
+            exportedNode.next_node_id = index === arr.length - 1 ? node.options[0]?.id || "" : arr[index + 1].id;
+            nodes = nodes.concat(exportedNode);
+          });
+
+        if (node.options.length > 0) {
+          const options: IGodotLine = {
+            id: entryPoint ? entryPoint : node.options[0].id,
+            type: "options",
+            options: node.options.map(option => {
+              const nextNode = nodesById[option.nextNodeId];
+              return {
+                condition: option.condition,
+                prompt: option.prompt,
+                next_node_id: nextNode ? nextNode.id : ""
+              };
+            })
+          };
+
+          nodes = nodes.concat(options);
+        }
+
+        return nodes;
+      }, [])
+    );
+  }, []);
+}
