@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import isDev from "electron-is-dev";
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 import { v4 as uuid } from "uuid";
 import FS from "fs-extra";
 
