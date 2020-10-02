@@ -18,11 +18,11 @@ export default function ConfirmLayout() {
   useEffect(() => {
     function onKeyUp(event: KeyboardEvent) {
       // Cancel on ESC
-      if (event.keyCode === 27) {
+      if (event.code === "Escape") {
         respond(confirmDialog.buttons[confirmDialog.buttons.length - 1]);
       }
       // Confirm on Enter
-      else if (event.keyCode === 13) {
+      else if (event.code === "Enter") {
         respond(confirmDialog.buttons[0]);
       }
     }

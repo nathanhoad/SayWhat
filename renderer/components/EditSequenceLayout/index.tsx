@@ -10,7 +10,7 @@ export default function EditSequenceLayout() {
 
   useEffect(() => {
     function onKeyUp(event: KeyboardEvent) {
-      if (event.keyCode === 27) {
+      if (event.code === "Escape") {
         window.close();
       }
     }

@@ -81,19 +81,19 @@ describe("ConfirmLayout", () => {
 
     mockWindowclose.mockReset();
     mockResponseToConfirmDialogue.mockReset();
-    fireEvent.keyUp(window, { keyCode: 96 });
+    fireEvent.keyUp(window, { code: "KeyA" });
     expect(mockResponseToConfirmDialogue).not.toHaveBeenCalled();
     expect(mockWindowclose).not.toHaveBeenCalled();
 
     mockWindowclose.mockReset();
     mockResponseToConfirmDialogue.mockReset();
-    fireEvent.keyUp(window, { keyCode: 13 });
+    fireEvent.keyUp(window, { code: "Enter" });
     expect(mockResponseToConfirmDialogue).toHaveBeenCalledWith("OK");
     expect(mockWindowclose).toHaveBeenCalled();
 
     mockWindowclose.mockReset();
     mockResponseToConfirmDialogue.mockReset();
-    fireEvent.keyUp(window, { keyCode: 27 });
+    fireEvent.keyUp(window, { code: "Escape" });
     expect(mockResponseToConfirmDialogue).toHaveBeenCalledWith("Cancel");
     expect(mockWindowclose).toHaveBeenCalled();
   });

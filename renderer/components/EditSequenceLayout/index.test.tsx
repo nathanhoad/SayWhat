@@ -60,11 +60,11 @@ describe("EditSequenceLayout", () => {
     const { queryByTestId } = render(<EditSequenceLayout />);
 
     mockWindowclose.mockReset();
-    fireEvent.keyUp(window, { keyCode: 96 });
+    fireEvent.keyUp(window, { code: "KeyA" });
     expect(mockWindowclose).not.toHaveBeenCalled();
 
     mockWindowclose.mockReset();
-    fireEvent.keyUp(window, { keyCode: 27 });
+    fireEvent.keyUp(window, { code: "Escape" });
     expect(mockWindowclose).toHaveBeenCalled();
 
     mockWindowclose.mockReset();
