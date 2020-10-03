@@ -223,7 +223,7 @@ export function projectToTres(project: IProject): string {
 
   return `[gd_resource type="Resource" load_steps=2 format=2]
 
-[ext_resource path="res://Text/DialogueResource.gd" type="Script" id=1]
+[ext_resource path="res://addons/saywhat_godot/dialogue_resource.gd" type="Script" id=1]
 
 [resource]
 script = ExtResource( 1 )
