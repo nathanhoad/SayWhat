@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import { NodePickerProvider } from "../useNodePicker";
 
-import { IProject, ISequence, INode, INodeOption, IApplicationState, IUserInterfaceState } from "../../../types";
+import { IProject, ISequence, INode, IApplicationState, IUserInterfaceState } from "../../../types";
 import { NodesProvider } from "../useNodes";
 
 interface IApplicationContext {
@@ -23,9 +23,9 @@ interface IApplicationContext {
   updateSequence: (sequence: ISequence) => void;
   removeSequence: (sequence: ISequence) => void;
 
-  addNode: (fromOption?: INodeOption) => void;
+  addNode: (name?: string, fromId?: string) => void;
   updateNode: (node: INode) => void;
-  connectNodes: (fromOption: INodeOption, toNode: INode) => void;
+  connectNodes: (fromId: string, toNodeId: string) => void;
   removeNode: (node: INode, willConfirm?: boolean) => void;
 }
 
@@ -105,16 +105,16 @@ export function ApplicationProvider({ children }: { children: any }) {
 
   // Nodes
 
-  function addNode(fromOption?: INodeOption) {
-    ipcRenderer.send("addNode", fromOption);
+  function addNode(name?: string, fromId?: string) {
+    ipcRenderer.send("addNode", name, fromId);
   }
 
   function updateNode(node: INode) {
     ipcRenderer.send("updateNode", node);
   }
 
-  function connectNodes(fromNodeOption: INodeOption, toNode: INode) {
-    ipcRenderer.send("connectNodes", fromNodeOption, toNode);
+  function connectNodes(fromId: string, toNodeId: string) {
+    ipcRenderer.send("connectNodes", fromId, toNodeId);
   }
 
   function removeNode(node: INode, willConfirm: boolean = true) {

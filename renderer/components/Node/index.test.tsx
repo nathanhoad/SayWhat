@@ -26,9 +26,9 @@ jest.mock("./Lines", () => {
   };
 });
 
-jest.mock("./Options", () => {
+jest.mock("./Responses", () => {
   return () => {
-    return <div data-testid="options"></div>;
+    return <div data-testid="responses"></div>;
   };
 });
 
@@ -70,12 +70,12 @@ describe("Node", () => {
           dialogue: "Hello"
         }
       ],
-      options: [
+      responses: [
         {
-          id: "optionId",
+          id: "responseId",
           prompt: "That is all.",
-          nextNodeId: null,
-          nextNodeName: "END"
+          goToNodeId: null,
+          goToNodeName: "END"
         }
       ]
     };
@@ -88,8 +88,8 @@ describe("Node", () => {
     // Edit with an error
     fireEvent.click(queryByTestId("edit-button"));
     fireEvent.change(queryByTestId("name-input"), { target: { value: "New Title" } });
-    fireEvent.change(queryByTestId("lines-input"), { target: { value: "Coco: That's different!\n[if bad" } });
-    fireEvent.change(queryByTestId("options-input"), { target: { value: "-> END" } });
+    fireEvent.change(queryByTestId("lines-input"), { target: { value: "[if bad" } });
+    fireEvent.change(queryByTestId("responses-input"), { target: { value: "-> END" } });
 
     // Save changes will fail due to error
     const saveButton = queryByTestId("save-button");
@@ -103,13 +103,13 @@ describe("Node", () => {
       target: { value: "Coco: It's fixed now!\n[if good] Coco: That's better" }
     });
 
-    // Now we have an error in options
-    fireEvent.change(queryByTestId("options-input"), { target: { value: "[if bad" } });
+    // Now we have an error in responses
+    fireEvent.change(queryByTestId("responses-input"), { target: { value: "[if bad" } });
     fireEvent.click(saveButton);
-    expect(queryByTestId("options-error").textContent).toContain("Malformed");
+    expect(queryByTestId("responses-error").textContent).toContain("Malformed");
 
     // Fix it
-    fireEvent.change(queryByTestId("options-input"), { target: { value: "-> END" } });
+    fireEvent.change(queryByTestId("responses-input"), { target: { value: "-> END" } });
 
     // Save should now work fine
     fireEvent.click(saveButton);
@@ -126,7 +126,7 @@ describe("Node", () => {
       name: "Node Name",
       updatedAt: new Date(),
       lines: [],
-      options: []
+      responses: []
     };
     const onClick = jest.fn();
 
@@ -151,7 +151,7 @@ describe("Node", () => {
       name: "Node Name",
       updatedAt: null,
       lines: [],
-      options: []
+      responses: []
     };
 
     const { queryByTestId } = render(<Node node={node} />);
@@ -175,12 +175,12 @@ describe("Node", () => {
           dialogue: "Hello"
         }
       ],
-      options: [
+      responses: [
         {
-          id: "optionId",
+          id: "responseId",
           prompt: "That is all.",
-          nextNodeId: null,
-          nextNodeName: "END"
+          goToNodeId: null,
+          goToNodeName: "END"
         }
       ]
     };
@@ -204,12 +204,12 @@ describe("Node", () => {
           dialogue: "Hello"
         }
       ],
-      options: [
+      responses: [
         {
-          id: "optionId",
+          id: "responseId",
           prompt: "That is all.",
-          nextNodeId: null,
-          nextNodeName: "END"
+          goToNodeId: null,
+          goToNodeName: "END"
         }
       ]
     };
@@ -238,12 +238,12 @@ describe("Node", () => {
           dialogue: "Hello"
         }
       ],
-      options: [
+      responses: [
         {
-          id: "optionId",
+          id: "responseId",
           prompt: "That is all.",
-          nextNodeId: null,
-          nextNodeName: "END"
+          goToNodeId: null,
+          goToNodeName: "END"
         }
       ]
     };
@@ -273,7 +273,7 @@ describe("Node", () => {
         name: "Node name",
         updatedAt: new Date(),
         lines: [],
-        options: []
+        responses: []
       };
 
       Object.defineProperty(window, "setTimeout", { value: (cb: Function, milliseconds: number) => cb() });

@@ -1,6 +1,6 @@
 import { keyBy } from "../renderer/lib/util";
 
-import { INode, ISequence, IProject, INodeLine } from "../types";
+import { IProject, INodeLine } from "../types";
 
 const XML_DEC = '<?xml version="1.0" encoding="UTF-8"?>\n';
 
@@ -19,19 +19,29 @@ export function projectToXml(project: IProject): string {
           const lines = node.lines
             .filter(l => l.dialogue !== "")
             .map((line, index, arr) => {
-              const type = line.mutation ? "mutation" : "dialogue";
-              const nextNodeId = index === arr.length - 1 ? node.options[0]?.id || "" : arr[index + 1].id;
-              const children =
-                type === "mutation"
-                  ? `<mutation do="${line.mutation}" nextNodeId="${nextNodeId}" />`
-                  : `<dialogue
-                      ${line.condition ? `if="${line.condition}"` : ""}
-                      character="${line.character}"
-                      nextNodeId="${nextNodeId}">
-                      ${line.dialogue}
-                    </dialogue>`;
+              const type = getType(line);
+              const nextNodeId = index === arr.length - 1 ? node.responses[0]?.id || "" : arr[index + 1].id;
 
-              // The Node's name can only be uses once
+              let children = "";
+              switch (type) {
+                case "mutation":
+                  children = `<mutation do="${line.mutation}" nextNodeId="${nextNodeId}" />`;
+                  break;
+
+                case "goto":
+                  children = `<goto if="${line.condition}" goToNodeId="${
+                    nodesById[line.goToNodeId]?.id ?? ""
+                  }" nextNodeId="${nextNodeId}" />`;
+                  break;
+
+                case "dialogue":
+                  children = `<dialogue ${line.condition ? `if="${line.condition}"` : ""} character="${
+                    line.character
+                  }" nextNodeId="${nextNodeId}">${line.dialogue}</dialogue>`;
+                  break;
+              }
+
+              // The Node's name can only be used once
               const id = entryPoint ? entryPoint : line.id;
               entryPoint = null;
 
@@ -39,28 +49,25 @@ export function projectToXml(project: IProject): string {
             })
             .join("");
 
-          let options = "";
-          if (node.options.length > 0) {
-            options = `
-              <node id="${entryPoint ? entryPoint : node.options[0].id}" type="options">
-                  <options>
-                    ${node.options
-                      .map(option => {
-                        const nextNode = nodesById[option.nextNodeId];
-                        const nextNodeId = nextNode ? nextNode.id : "";
-                        return `<option 
-                                  ${option.condition ? `if="${option.condition}"` : ""} 
-                                  nextNodeId="${nextNodeId}">
-                                  ${option.prompt}
-                                </option>`;
+          let responses = "";
+          if (node.responses.length > 0) {
+            responses = `
+              <node id="${entryPoint ? entryPoint : node.responses[0].id}" type="responses">
+                  <responses>
+                    ${node.responses
+                      .map(response => {
+                        const nextNodeId = nodesById[response.goToNodeId]?.id ?? "";
+                        return `<response ${
+                          response.condition ? `if="${response.condition}"` : ""
+                        } nextNodeId="${nextNodeId}">${response.prompt}</response>`;
                       })
                       .join("")}
-                  </options>
+                  </responses>
                 </node>`;
           }
 
           // Add to the xml output
-          return lines + options;
+          return lines + responses;
         })
         .join("");
 
@@ -130,14 +137,15 @@ export function projectToResx(project: IProject) {
 }
 
 interface IExportedNode {
-  id?: string;
-  type?: "dialogue" | "mutation" | "options";
+  id: string;
+  type?: "dialogue" | "mutation" | "goto" | "responses";
   nextNodeId?: string;
   condition?: string;
   character?: string;
   dialogue?: string;
   mutation?: string;
-  options?: Array<{
+  gotoNodeId?: string;
+  responses?: Array<{
     condition?: string;
     prompt?: string;
     nextNodeId?: string;
@@ -160,33 +168,40 @@ export function projectToJson(project: IProject): string {
             node.lines
               .filter(l => l.dialogue !== "")
               .forEach((line, index, arr) => {
-                const exportedNode: IExportedNode = line;
+                const exportedNode: IExportedNode = {
+                  id: line.id,
+                  type: getType(line),
+                  condition: line.condition,
+                  character: line.character,
+                  dialogue: line.dialogue,
+                  mutation: line.mutation,
+                  gotoNodeId: line.goToNodeId,
+                  nextNodeId: index === arr.length - 1 ? node.responses[0]?.id || "" : arr[index + 1].id
+                };
 
                 if (entryPoint) {
                   exportedNode.id = entryPoint;
                   entryPoint = null;
                 }
 
-                exportedNode.type = exportedNode.mutation ? "mutation" : "dialogue";
-                exportedNode.nextNodeId = index === arr.length - 1 ? node.options[0]?.id || "" : arr[index + 1].id;
                 nodes = nodes.concat(exportedNode);
               });
 
-            if (node.options.length > 0) {
-              const options: IExportedNode = {
-                id: entryPoint ? entryPoint : node.options[0].id,
-                type: "options",
-                options: node.options.map(option => {
-                  const nextNode = nodesById[option.nextNodeId];
+            if (node.responses.length > 0) {
+              const responses: IExportedNode = {
+                id: entryPoint ? entryPoint : node.responses[0].id,
+                type: "responses",
+                responses: node.responses.map(response => {
+                  const nextNode = nodesById[response.goToNodeId];
                   return {
-                    condition: option.condition,
-                    prompt: option.prompt,
+                    condition: response.condition,
+                    prompt: response.prompt,
                     nextNodeId: nextNode ? nextNode.id : null
                   };
                 })
               };
 
-              nodes = nodes.concat(options);
+              nodes = nodes.concat(responses);
             }
 
             return nodes;
@@ -200,14 +215,15 @@ export function projectToJson(project: IProject): string {
 }
 
 interface IGodotLine {
-  id?: string;
-  type?: "dialogue" | "mutation" | "options";
+  id: string;
+  type?: "dialogue" | "mutation" | "goto" | "responses";
   next_node_id?: string;
   condition?: string;
   character?: string;
   dialogue?: string;
   mutation?: string;
-  options?: Array<{
+  go_to_node_id?: string;
+  responses?: Array<{
     condition?: string;
     prompt?: string;
     next_node_id?: string;
@@ -241,37 +257,57 @@ export function projectToExportNodesList(project: IProject): Array<IGodotLine> {
         node.lines
           .filter(l => l.dialogue !== "")
           .forEach((line, index, arr) => {
-            const exportedNode: IGodotLine = line;
+            const exportedNode: IGodotLine = {
+              id: line.id,
+              type: getType(line),
+              condition: line.condition,
+              character: line.character,
+              dialogue: line.dialogue,
+              mutation: line.mutation,
+              go_to_node_id: line.goToNodeId ?? "",
+              next_node_id: index === arr.length - 1 ? node.responses[0]?.id || "" : arr[index + 1].id
+            };
 
             if (entryPoint) {
               exportedNode.id = entryPoint;
               entryPoint = null;
             }
 
-            exportedNode.type = exportedNode.mutation ? "mutation" : "dialogue";
-            exportedNode.next_node_id = index === arr.length - 1 ? node.options[0]?.id || "" : arr[index + 1].id;
             nodes = nodes.concat(exportedNode);
           });
 
-        if (node.options.length > 0) {
-          const options: IGodotLine = {
-            id: entryPoint ? entryPoint : node.options[0].id,
-            type: "options",
-            options: node.options.map(option => {
-              const nextNode = nodesById[option.nextNodeId];
+        if (node.responses.length > 0) {
+          const responses: IGodotLine = {
+            id: entryPoint ? entryPoint : node.responses[0].id,
+            type: "responses",
+            responses: node.responses.map(response => {
+              const nextNode = nodesById[response.goToNodeId];
               return {
-                condition: option.condition,
-                prompt: option.prompt,
+                condition: response.condition,
+                prompt: response.prompt,
                 next_node_id: nextNode ? nextNode.id : ""
               };
             })
           };
 
-          nodes = nodes.concat(options);
+          nodes = nodes.concat(responses);
         }
 
         return nodes;
       }, [])
     );
   }, []);
+}
+
+type INodeLineType = "mutation" | "goto" | "dialogue";
+
+/**
+ * Get the type of a line
+ * @param line
+ */
+export function getType(line: INodeLine): INodeLineType {
+  if (line.goToNodeName) return "goto";
+  if (line.mutation) return "mutation";
+  if (line.goToNodeId) return "goto";
+  return "dialogue";
 }

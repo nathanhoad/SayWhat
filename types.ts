@@ -20,6 +20,7 @@ export interface IConfirmDialog {
 }
 
 export interface IProject {
+  savedWithVersion: number;
   sequences: Array<ISequence>;
 }
 
@@ -34,22 +35,31 @@ export interface INode {
   id: string;
   name: string;
   lines: Array<INodeLine>;
-  options: Array<INodeOption>;
+  responses: Array<INodeResponse>;
   updatedAt: Date;
+}
+
+export interface INodeLink {
+  id: string;
+  goToNodeName?: string;
+  goToNodeId?: string;
 }
 
 export interface INodeLine {
   id: string;
+  comment?: string;
   condition?: string;
   character?: string;
   dialogue?: string;
   mutation?: string;
+  goToNodeName?: string;
+  goToNodeId?: string;
 }
 
-export interface INodeOption {
+export interface INodeResponse {
   id: string;
   condition?: string;
   prompt?: string;
-  nextNodeName?: string;
-  nextNodeId?: string;
+  goToNodeName?: string;
+  goToNodeId?: string;
 }

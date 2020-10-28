@@ -1,12 +1,12 @@
 import { useState, useEffect, MouseEvent } from "react";
 import cn from "classnames";
 
-import { linesToText, textToLines, optionsToText, textToOptions } from "../../lib/nodeParser";
+import { linesToText, textToLines, responsesToText, textToResponses } from "../../lib/nodeParser";
 import useApplication from "../../hooks/useApplication";
 import TextArea from "../TextArea";
 import Button from "../Button";
 import Lines from "./Lines";
-import Options from "./Options";
+import Responses from "./Responses";
 
 import { copyToClipboard } from "../../lib/util";
 
@@ -26,7 +26,7 @@ export default function Node({ node, onClick }: Props) {
 
   const [name, setName] = useState(node.name);
   const [linesText, setLinesText] = useState(linesToText(node.lines));
-  const [optionsText, setOptionsText] = useState(optionsToText(node.options, selectedSequence?.nodes));
+  const [responsesText, setResponsesText] = useState(responsesToText(node.responses, selectedSequence?.nodes));
 
   const [error, setError] = useState(null);
 
@@ -35,8 +35,8 @@ export default function Node({ node, onClick }: Props) {
     setError(null);
     setName(node.name);
     setLinesText(linesToText(node.lines));
-    setOptionsText(optionsToText(node.options, selectedSequence?.nodes));
-  }, [node.name, node.lines, node.options]);
+    setResponsesText(responsesToText(node.responses, selectedSequence?.nodes));
+  }, [node.name, node.lines, node.responses]);
 
   function onNodeClick() {
     if (!isEditing && typeof onClick === "function") onClick();
@@ -46,14 +46,14 @@ export default function Node({ node, onClick }: Props) {
     try {
       setError(null);
 
-      const lines = textToLines(linesText);
-      const options = textToOptions(optionsText, selectedSequence?.nodes);
+      const lines = textToLines(linesText, selectedSequence?.nodes);
+      const responses = textToResponses(responsesText, selectedSequence?.nodes);
 
       updateNode({
         ...node,
         name,
         lines,
-        options
+        responses
       });
 
       setIsEditing(false);
@@ -139,23 +139,23 @@ export default function Node({ node, onClick }: Props) {
 
           <hr />
 
-          <section className="Options">
+          <section className="Responses">
             {isEditing && (
               <>
                 <TextArea
-                  value={optionsText}
-                  onChange={text => setOptionsText(text)}
-                  placeholder="Enter some options..."
-                  data-testid="options-input"
+                  value={responsesText}
+                  onChange={text => setResponsesText(text)}
+                  placeholder="Enter some responses..."
+                  data-testid="responses-input"
                 />
-                {error && error.type === "options" && (
-                  <div className="Error" style={{ top: `${error.line - 1}rem` }} data-testid="options-error">
+                {error && error.type === "responses" && (
+                  <div className="Error" style={{ top: `${error.line - 1}rem` }} data-testid="responses-error">
                     <span>{error.message}</span>
                   </div>
                 )}
               </>
             )}
-            {!isEditing && <Options options={node.options} />}
+            {!isEditing && <Responses responses={node.responses} />}
           </section>
 
           {isEditing && (
@@ -259,7 +259,7 @@ export default function Node({ node, onClick }: Props) {
         }
 
         .Lines,
-        .Options {
+        .Responses {
           font-family: var(--font-family-sans-serif);
           font-size: 0.7rem;
           line-height: 1.1rem;

@@ -1,5 +1,4 @@
 import { ipcMain, BrowserWindow } from "electron";
-import isDev from "electron-is-dev";
 
 import {
   onStateChange,
@@ -17,7 +16,7 @@ import {
   closeSequencesList,
   editSequence
 } from "./state";
-import { ISequence, INode, INodeOption } from "../types";
+import { ISequence, INode, INodeResponse } from "../types";
 
 export default function initIpc(window: BrowserWindow) {
   ipcMain.setMaxListeners(100);
@@ -64,16 +63,16 @@ export default function initIpc(window: BrowserWindow) {
 
   // Nodes
 
-  on("addNode", (fromOption?: INodeOption) => {
-    selectNode(addNode(fromOption));
+  on("addNode", (name: string, fromId?: string) => {
+    selectNode(addNode(name, fromId));
   });
 
   on("selectNode", (node: INode) => {
     selectNode(node);
   });
 
-  on("connectNodes", (fromNodeOption: INodeOption, toNode: INode) => {
-    connectNodes(fromNodeOption, toNode);
+  on("connectNodes", (fromId: string, toNodeId: string) => {
+    connectNodes(fromId, toNodeId);
   });
 
   on("updateNode", (node: INode) => {
@@ -85,7 +84,7 @@ export default function initIpc(window: BrowserWindow) {
   });
 }
 
-function on(eventName: string, handler: (...args: any[]) => void) {
+function on(eventName: string, handler: (...args: Array<any>) => void) {
   ipcMain.on(eventName, (event, ...eventArgs) => {
     handler(...eventArgs);
     event.sender.send("stateChange", getState());

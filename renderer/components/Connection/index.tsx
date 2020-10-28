@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function Connection(props: Props) {
-  const { byOptionId } = useNodes();
+  const { byChildId } = useNodes();
 
   const [height, setHeight] = useState(0);
   const [end, setEnd] = useState(0);
@@ -31,10 +31,10 @@ export default function Connection(props: Props) {
     const { offsetTop: fromY, offsetHeight: firstH } = from;
     const { offsetTop: secondY, offsetHeight: secondH } = to;
 
-    // The true Y adds the parent element (options div) and the node element
-    const optionsTop = from.parentElement.offsetTop;
-    const nodeTop = document.getElementById(byOptionId[from.id]?.id)?.offsetTop;
-    const firstY = optionsTop + nodeTop + fromY;
+    // The true Y adds the parent element (responses or lines div) and the node element
+    const fromParentTop = from.parentElement.offsetTop;
+    const nodeTop = document.getElementById(byChildId[from.id]?.id)?.offsetTop;
+    const firstY = fromParentTop + nodeTop + fromY;
 
     let y: number;
     let h: number;

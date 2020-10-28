@@ -22,6 +22,6 @@ Mutations call out to the engine and affect state. For example, a character migh
 
 The app has exports to XML and JSON.
 
-Both formats simply list out every line and group of options as their own nodes (per sequence/scene). Each node in this context then points to the next node by a generated ID.
+Both formats simply list out every line and group of responses as their own nodes (per sequence/scene). Each node in this context then points to the next node by a generated ID.
 
 The idea would be that you can request an entry point and then just step through each line.

@@ -1,7 +1,9 @@
+import LinkToNode from "../LinkToNode";
+
 import { INodeLine } from "../../../types";
 
 interface Props {
-  lines: INodeLine[];
+  lines: Array<INodeLine>;
 }
 
 export default function Lines({ lines }: Props) {
@@ -11,7 +13,13 @@ export default function Lines({ lines }: Props) {
         if (line.dialogue === "") return <div key={line.id} className="BlankLine" data-testid="blank" />;
 
         return (
-          <div key={line.id} className="Line">
+          <div key={line.id} id={line.id} className="Line">
+            {line.comment && (
+              <span className="Comment" data-testid="comment">
+                # {line.comment}
+              </span>
+            )}
+
             {line.condition && (
               <span className="Condition" data-testid="condition">
                 if {line.condition}
@@ -27,6 +35,9 @@ export default function Lines({ lines }: Props) {
                 {line.dialogue}
               </span>
             )}
+
+            {line.goToNodeName && <LinkToNode from={line} />}
+
             {line.mutation && (
               <span className="Mutation" data-testid="mutation">
                 do {line.mutation}
@@ -44,6 +55,11 @@ export default function Lines({ lines }: Props) {
 
         .BlankLine {
           margin-bottom: 1rem;
+        }
+
+        .Comment {
+          color: var(--color-line);
+          font-weight: bold;
         }
 
         .Condition {

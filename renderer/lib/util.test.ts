@@ -1,6 +1,15 @@
 import { v4 as uuid } from "uuid";
 
-import { keyBy, sortBy, findLinksToNode, plural, filterNodes, getNodesByOptionId, copyToClipboard } from "./util";
+import {
+  keyBy,
+  sortBy,
+  findLinksToNode,
+  plural,
+  filterNodes,
+  getNodesByChildId,
+  copyToClipboard,
+  findLinksFromNode
+} from "./util";
 import { INode } from "../../types";
 
 describe("plural", () => {
@@ -94,52 +103,57 @@ describe("findLinksToNode", () => {
     expect.hasAssertions();
 
     const targetNode: INode = {
-      id: uuid(),
+      id: "target",
       name: "Target Node",
       updatedAt: null,
       lines: [],
-      options: []
+      responses: []
     };
 
     const nodes: Array<INode> = [
       targetNode,
       {
-        id: uuid(),
+        id: "link1",
         name: "link1",
         updatedAt: null,
-        lines: [],
-        options: [
+        lines: [
           {
-            id: uuid(),
-            nextNodeId: uuid()
+            id: "line1",
+            goToNodeId: "target"
+          }
+        ],
+        responses: [
+          {
+            id: "response1",
+            goToNodeId: "nothing"
           },
           {
-            id: uuid(),
-            nextNodeId: targetNode.id
+            id: "response2",
+            goToNodeId: "target"
           }
         ]
       },
       {
-        id: uuid(),
+        id: "link2",
         name: "link2",
         updatedAt: null,
         lines: [],
-        options: [
+        responses: [
           {
-            id: uuid(),
-            nextNodeId: targetNode.id
+            id: "response3",
+            goToNodeId: "target"
           }
         ]
       },
       {
-        id: uuid(),
+        id: "no_link",
         name: "no_link",
         updatedAt: null,
         lines: [],
-        options: [
+        responses: [
           {
-            id: uuid(),
-            nextNodeId: uuid()
+            id: "response4",
+            goToNodeId: "nothing"
           }
         ]
       }
@@ -148,9 +162,45 @@ describe("findLinksToNode", () => {
     expect(findLinksToNode(null, nodes)).toHaveLength(0);
 
     const links = findLinksToNode(targetNode, nodes);
+    expect(links).toHaveLength(3);
+    expect(links[0]).toBe("line1");
+    expect(links[1]).toBe("response2");
+    expect(links[2]).toBe("response3");
+  });
+});
+
+describe("findLinksFromNode", () => {
+  it("can list any out going links", () => {
+    expect.hasAssertions();
+
+    const node: INode = {
+      id: uuid(),
+      lines: [
+        {
+          id: "line1",
+          goToNodeId: "next"
+        },
+        {
+          id: uuid(),
+          goToNodeId: null
+        }
+      ],
+      responses: [
+        {
+          id: "response1",
+          goToNodeId: "next"
+        },
+        {
+          id: uuid(),
+          goToNodeId: null
+        }
+      ]
+    };
+
+    const links = findLinksFromNode(node);
     expect(links).toHaveLength(2);
-    expect(links[0]).toBe(nodes[1].options[1].id);
-    expect(links[1]).toBe(nodes[2].options[0].id);
+    expect(links[0]).toEqual({ fromId: "line1", toId: "next" });
+    expect(links[1]).toEqual({ fromId: "response1", toId: "next" });
   });
 });
 
@@ -170,25 +220,25 @@ describe("filterNodes", () => {
         name: "slug1",
         updatedAt: null,
         lines: [],
-        options: []
+        responses: []
       },
       {
         id: "id2",
         name: "slug2",
         updatedAt: null,
         lines: [],
-        options: []
+        responses: []
       },
       {
         id: "id3",
         name: "slug3",
         updatedAt: null,
         lines: [],
-        options: [
+        responses: [
           {
-            id: "option1",
-            nextNodeId: "id3",
-            nextNodeName: "slug1"
+            id: "response1",
+            goToNodeId: "id3",
+            goToNodeName: "slug1"
           }
         ]
       }
@@ -219,10 +269,19 @@ describe("filterNodes", () => {
             condition: "condition=1",
             character: "Character",
             dialogue: "Dialogue",
-            mutation: "mutation"
+            mutation: "mutation",
+            goToNodeName: "goto"
+          },
+          {
+            id: "line2",
+            condition: "nothing",
+            character: "nothing",
+            dialogue: "nothing",
+            mutation: "nothing",
+            goToNodeName: "nothing"
           }
         ],
-        options: []
+        responses: []
       }
     ];
 
@@ -240,9 +299,12 @@ describe("filterNodes", () => {
 
     filteredNodes = filterNodes("mutat", nodes);
     expect(filteredNodes).toHaveLength(1);
+
+    filteredNodes = filterNodes("goto", nodes);
+    expect(filteredNodes).toHaveLength(1);
   });
 
-  it("filters by options", () => {
+  it("filters by responses", () => {
     expect.hasAssertions();
 
     const nodes: Array<INode> = [
@@ -251,12 +313,12 @@ describe("filterNodes", () => {
         name: "slug1",
         updatedAt: null,
         lines: [],
-        options: [
+        responses: [
           {
-            id: "option1",
+            id: "response1",
             condition: "condition=1",
             prompt: "Prompt",
-            nextNodeName: "next_slug"
+            goToNodeName: "next_slug"
           }
         ]
       }
@@ -276,14 +338,14 @@ describe("filterNodes", () => {
   });
 });
 
-describe("getNodesByOptionId", () => {
+describe("getNodesByChildId", () => {
   it("returns an empty dictionary when given no nodes", () => {
     expect.hasAssertions();
 
-    expect(Object.keys(getNodesByOptionId(null))).toHaveLength(0);
+    expect(Object.keys(getNodesByChildId(null))).toHaveLength(0);
   });
 
-  it("keys nodes by their option IDs", () => {
+  it("keys nodes by their response IDs", () => {
     expect.hasAssertions();
 
     const nodes: Array<INode> = [
@@ -291,19 +353,23 @@ describe("getNodesByOptionId", () => {
         id: "node1",
         name: "Node 1",
         updatedAt: null,
-        lines: [],
-        options: [
+        lines: [
           {
-            id: "option1",
+            id: "line1"
+          }
+        ],
+        responses: [
+          {
+            id: "response1",
             prompt: "Next!",
-            nextNodeId: "node2",
-            nextNodeName: "Node 2"
+            goToNodeId: "node2",
+            goToNodeName: "Node 2"
           },
           {
-            id: "option2",
+            id: "response2",
             prompt: "That is all",
-            nextNodeId: null,
-            nextNodeName: "END"
+            goToNodeId: null,
+            goToNodeName: "END"
           }
         ]
       },
@@ -312,22 +378,23 @@ describe("getNodesByOptionId", () => {
         name: "Node 2",
         updatedAt: null,
         lines: [],
-        options: [
+        responses: [
           {
-            id: "option3",
-            nextNodeId: null,
-            nextNodeName: "END"
+            id: "response3",
+            goToNodeId: null,
+            goToNodeName: "END"
           }
         ]
       }
     ];
 
-    const byOptionId = getNodesByOptionId(nodes);
+    const byChildId = getNodesByChildId(nodes);
 
-    expect(Object.keys(byOptionId)).toHaveLength(3);
-    expect(byOptionId["option1"].id).toBe("node1");
-    expect(byOptionId["option2"].id).toBe("node1");
-    expect(byOptionId["option3"].id).toBe("node2");
+    expect(Object.keys(byChildId)).toHaveLength(4);
+    expect(byChildId["line1"].id).toBe("node1");
+    expect(byChildId["response1"].id).toBe("node1");
+    expect(byChildId["response2"].id).toBe("node1");
+    expect(byChildId["response3"].id).toBe("node2");
   });
 });
 

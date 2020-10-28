@@ -32,11 +32,11 @@ describe("NodeList", () => {
         name: "Node 1",
         updatedAt: null,
         lines: [],
-        options: [
+        responses: [
           {
-            id: "option1",
-            nextNodeId: "node2",
-            nextNodeName: "Node 2"
+            id: "response1",
+            goToNodeId: "node2",
+            goToNodeName: "Node 2"
           }
         ]
       },
@@ -45,12 +45,12 @@ describe("NodeList", () => {
         name: "Node 2",
         updatedAt: null,
         lines: [],
-        options: [
+        responses: [
           {
-            id: "option2",
-            prompt: "Option 2",
-            nextNodeId: "node1",
-            nextNodeName: "Node 1"
+            id: "response2",
+            prompt: "Response 2",
+            goToNodeId: "node1",
+            goToNodeName: "Node 1"
           }
         ]
       }

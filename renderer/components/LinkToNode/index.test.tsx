@@ -35,25 +35,25 @@ describe("LinkToNode", () => {
   it("can render the end of a conversation", () => {
     expect.hasAssertions();
 
-    const fromOption = {
-      id: "optionId",
-      nextNodeName: "END"
+    const from = {
+      id: "responseId",
+      goToNodeName: "END"
     };
 
-    const { container } = render(<LinkToNode fromOption={fromOption} />);
+    const { container } = render(<LinkToNode from={from} />);
     expect(container.innerHTML).toContain("end conversation");
   });
 
   it("can pick or create the next node", () => {
     expect.hasAssertions();
 
-    const fromOption = {
-      id: "optionId",
-      nextNodeName: "unkown",
-      nextNodeId: "unknown"
+    const from = {
+      id: "responseId",
+      goToNodeName: "unkown",
+      goToNodeId: "unknown"
     };
 
-    const { queryByTestId } = render(<LinkToNode fromOption={fromOption} />);
+    const { queryByTestId } = render(<LinkToNode from={from} />);
     expect(queryByTestId("not-found").textContent).toContain("doesn't exist");
 
     fireEvent.click(queryByTestId("create-button"));
@@ -66,13 +66,13 @@ describe("LinkToNode", () => {
   it("can render a link to the next node", () => {
     expect.hasAssertions();
 
-    const fromOption = {
-      id: "optionId",
-      nextNodeName: "Next",
-      nextNodeId: "nodeId"
+    const from = {
+      id: "responseId",
+      goToNodeName: "Next",
+      goToNodeId: "nodeId"
     };
 
-    const { queryByTestId } = render(<LinkToNode fromOption={fromOption} />);
+    const { queryByTestId } = render(<LinkToNode from={from} />);
 
     const link = queryByTestId("node-link") as HTMLAnchorElement;
     expect(link.textContent).toContain("Next");

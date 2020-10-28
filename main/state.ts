@@ -1,12 +1,13 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import isDev from "electron-is-dev";
 import { EventEmitter } from "events";
 import { v4 as uuid } from "uuid";
 import FS from "fs-extra";
 
-import { getNodesByOptionId } from "../renderer/lib/util";
+import { getNodesByChildId } from "../renderer/lib/util";
 
-import { ISequence, INode, INodeOption, IApplicationState, IUserInterfaceState, IProject } from "../types";
+import { ISequence, INode, IApplicationState, IUserInterfaceState, IProject } from "../types";
+import { getVersion } from "./file";
 
 const state: IApplicationState = {
   project: getEmptyProject(),
@@ -43,6 +44,29 @@ export function resetState() {
 }
 
 export function setProject(project: IProject) {
+  // v1.6 to v1.7 cleanup
+  if (!project.savedWithVersion || project.savedWithVersion < 1.7) {
+    project.sequences = project.sequences.map(sequence => {
+      sequence.nodes = sequence.nodes.map(node => {
+        if (node["options"]) {
+          node.responses = node["options"].map(response => {
+            if (response["nextNodeName"]) {
+              response.goToNodeId = response["nextNodeId"];
+              response.goToNodeName = response["nextNodeName"];
+              delete response["nextNodeId"];
+              delete response["nextNodeName"];
+            }
+
+            return response;
+          });
+          delete node["options"];
+        }
+        return node;
+      });
+      return sequence;
+    });
+  }
+
   state.project = project;
   stateChanged();
 }
@@ -174,14 +198,12 @@ export async function removeSequence(sequence: ISequence, willConfirm: boolean =
 
 // Nodes
 
-export function addNode(fromOption?: INodeOption) {
+export function addNode(name?: string, fromId?: string) {
   const sequence = state.project.sequences[state.userInterface.selectedSequenceIndex];
   if (!sequence) return;
 
-  const nodesByOptionId = getNodesByOptionId(sequence.nodes);
-
   const id = uuid();
-  const name = fromOption?.nextNodeName ?? "Node #" + Math.floor(Math.random() * 9000);
+  name = name ?? "Node #" + Math.floor(Math.random() * 9000);
 
   const newNode: INode = {
     id,
@@ -193,27 +215,19 @@ export function addNode(fromOption?: INodeOption) {
         dialogue: "Hello"
       }
     ],
-    options: [
+    responses: [
       {
         id: uuid(),
         prompt: "That is all",
-        nextNodeName: "END",
-        nextNodeId: null
+        goToNodeName: "END",
+        goToNodeId: null
       }
     ],
     updatedAt: null
   };
 
   // Update the existing node that is creating this new node
-  const fromNode: INode = nodesByOptionId[fromOption?.id];
-  if (fromNode) {
-    fromNode.options = fromNode.options.map(option => {
-      if (option.id === fromOption.id) {
-        option.nextNodeId = newNode.id || null;
-      }
-      return option;
-    });
-  }
+  connectNodes(fromId, newNode.id);
 
   sequence.nodes.push(newNode);
   sequence.updatedAt = new Date();
@@ -234,22 +248,28 @@ export function updateNode(node: INode) {
   stateChanged();
 }
 
-export function connectNodes(fromNodeOption: INodeOption, toNode: INode) {
+export function connectNodes(fromId: string, toNodeId: string) {
   const sequence = state.project.sequences[state.userInterface.selectedSequenceIndex];
   if (!sequence) return;
 
-  if (!fromNodeOption) return;
-  if (!toNode) return;
+  if (!fromId) return;
+  if (!toNodeId) return;
 
-  const nodesByOptionId = getNodesByOptionId(sequence.nodes);
-  const fromNode: INode = nodesByOptionId[fromNodeOption.id];
+  const nodesByChildId = getNodesByChildId(sequence.nodes);
+  const fromNode: INode = nodesByChildId[fromId];
 
-  fromNode.options = fromNode.options.map(option => {
-    if (option.id === fromNodeOption.id) {
-      option.nextNodeId = toNode.id;
+  if (fromNode) {
+    const fromLine = fromNode.lines.find(l => l.id === fromId);
+    if (fromLine) {
+      fromLine.goToNodeId = toNodeId;
+    } else {
+      const fromResponse = fromNode.responses.find(o => o.id === fromId);
+      if (fromResponse) {
+        fromResponse.goToNodeId = toNodeId;
+      }
     }
-    return option;
-  });
+  }
+
   fromNode.updatedAt = new Date();
   sequence.updatedAt = new Date();
   setHasUnsavedChanges(true);
@@ -321,6 +341,7 @@ function getEmptyUserInterface(): IUserInterfaceState {
 function getEmptyProject(): IProject {
   const nodeId = uuid();
   return {
+    savedWithVersion: getVersion(),
     sequences: [
       {
         id: uuid(),
@@ -339,27 +360,31 @@ function getEmptyProject(): IProject {
               },
               {
                 id: uuid(),
-                condition: "hasMetCharacter=0",
+                condition: "has_met_character",
                 character: "Character",
                 dialogue: "It's nice to meet you."
               },
               {
                 id: uuid(),
-                mutation: "hasMetCharacter=1"
+                comment: "This is a comment"
+              },
+              {
+                id: uuid(),
+                mutation: "has_met_character = true"
               }
             ],
-            options: [
+            responses: [
               {
                 id: uuid(),
                 prompt: "Can you repeat that?",
-                nextNodeId: nodeId,
-                nextNodeName: "Start"
+                goToNodeId: nodeId,
+                goToNodeName: "Start"
               },
               {
                 id: uuid(),
                 prompt: "That's all for now",
-                nextNodeId: null,
-                nextNodeName: "END"
+                goToNodeId: null,
+                goToNodeName: "END"
               }
             ]
           }

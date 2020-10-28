@@ -13,12 +13,30 @@ import {
 } from "./state";
 import { projectToTres, projectToXml, projectToJson, projectToResx } from "./export";
 
+/**
+ * Get the current version of SayWhat
+ */
+export function getVersion(): number {
+  const pkg = FS.readJsonSync(Path.join(__dirname, "..", "..", "..", "package.json"));
+  if (pkg) {
+    const [major, minor] = pkg.version.split(".");
+    return parseFloat(`${major}.${minor}`);
+  }
+  return 1;
+}
+
+/**
+ * Reset the project back to the default state
+ */
 export async function newProject() {
   if (await promptToSaveIfNeededWasCancelled()) return;
 
   resetState();
 }
 
+/**
+ * Open a project
+ */
 export async function openProject() {
   if (await promptToSaveIfNeededWasCancelled()) return;
 
@@ -40,6 +58,10 @@ export async function openProject() {
   }
 }
 
+/**
+ * Save the current project to file
+ * @param saveAs
+ */
 export function saveProject(saveAs: boolean = false) {
   const { userInterface, project } = getState();
 
@@ -65,6 +87,8 @@ export function saveProject(saveAs: boolean = false) {
     }
   }
 
+  project.savedWithVersion = getVersion();
+
   FS.mkdirpSync(Path.dirname(filename));
   FS.writeJsonSync(filename, project);
 
@@ -72,6 +96,9 @@ export function saveProject(saveAs: boolean = false) {
   setHasUnsavedChanges(false);
 }
 
+/**
+ * Repeat the last export in this session
+ */
 export function repeatLastExport() {
   const { userInterface } = getState();
 
@@ -89,6 +116,9 @@ export function repeatLastExport() {
   shell.showItemInFolder(filename);
 }
 
+/**
+ * Export the project as a Godot Resource
+ */
 export function exportProjectAsTres() {
   const path = dialog.showSaveDialogSync({
     title: "Save project",
@@ -105,6 +135,9 @@ export function exportProjectAsTres() {
   }
 }
 
+/**
+ * Export the project to XML
+ */
 export function exportProjectAsXml() {
   const path = dialog.showSaveDialogSync({
     title: "Save project",
@@ -125,6 +158,9 @@ export function exportProjectAsXml() {
   }
 }
 
+/**
+ * Export the project as JSON
+ */
 export function exportProjectAsJson() {
   const path = dialog.showSaveDialogSync({
     title: "Save project",
@@ -141,6 +177,9 @@ export function exportProjectAsJson() {
   }
 }
 
+/**
+ * Ask to save the current project if it needs it
+ */
 export async function promptToSaveIfNeededWasCancelled() {
   if (!getState().userInterface.hasUnsavedChanges) return false;
 

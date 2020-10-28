@@ -5,7 +5,7 @@ import Connection from ".";
 
 jest.mock("../../hooks/useNodes", () => {
   return () => ({
-    byOptionId: {
+    byChildId: {
       fromElement: {
         id: "nodeElement"
       }

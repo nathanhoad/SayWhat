@@ -1,11 +1,11 @@
 import Node from "../Node";
 import Connection from "../Connection";
-import { findLinksToNode } from "../../lib/util";
+import { findLinksToNode, findLinksFromNode } from "../../lib/util";
 
 import { INode } from "../../../types";
 
 interface INodeListProps {
-  nodes: INode[];
+  nodes: Array<INode>;
   selectedNode?: INode;
   onSelectNode: (node: INode) => void;
 }
@@ -14,6 +14,7 @@ export default function NodeList({ nodes, selectedNode, onSelectNode }: INodeLis
   if (!nodes) return null;
 
   const incomingLinks = findLinksToNode(selectedNode, nodes);
+  const outgoingLinks = findLinksFromNode(selectedNode);
 
   return (
     <>
@@ -25,13 +26,13 @@ export default function NodeList({ nodes, selectedNode, onSelectNode }: INodeLis
       {nodes.map(node => (
         <Node key={node.id} node={node} onClick={() => onSelectNode(node)} data-testid={`node-${node.id}`} />
       ))}
-      {selectedNode?.options.map((option, index) => {
+      {outgoingLinks.map((link, index) => {
         return (
           <Connection
             key={index}
             index={index}
-            fromId={option.id}
-            toId={option.nextNodeId}
+            fromId={link.fromId}
+            toId={link.toId}
             data-testid="outgoing-connection"
           />
         );

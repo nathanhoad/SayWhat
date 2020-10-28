@@ -1,5 +1,5 @@
-import { textToLines, linesToText, textToOptions, optionsToText } from "./nodeParser";
-import { INode, INodeLine, INodeOption } from "../../types";
+import { textToLines, linesToText, textToResponses, responsesToText } from "./nodeParser";
+import { INode, INodeLine, INodeResponse } from "../../types";
 import { v4 as uuid } from "uuid";
 
 describe("Parser", () => {
@@ -9,30 +9,45 @@ describe("Parser", () => {
     const lines = `Character: This line is fine.
                   [if  this line is broken`;
     expect(() => {
-      textToLines(lines);
+      textToLines(lines, []);
     }).toThrow(/Malformed conditional/);
 
-    const options = `This is fine. -> END
+    const responses = `This is fine. -> END
                      [if this line is broken`;
     expect(() => {
-      textToOptions(options, []);
+      textToResponses(responses, []);
     }).toThrow(/Malformed conditional/);
   });
 
   it("can convert text to node lines", () => {
     expect.hasAssertions();
 
+    const nodes: Array<INode> = [
+      {
+        id: uuid(),
+        name: "Something",
+        updatedAt: null,
+        lines: [],
+        responses: []
+      }
+    ];
+
     const text = `[if metLilly=0] Lilly: Hi, I'm Lilly.
                   [if metLilly=1] Lilly: Hello again.
 
                   [do metLilly=1]
 
-                  Lilly: What can I do for you?`;
+                  Lilly: What can I do for you?
+                  
+                  # Comment line
+                  [if something] -> Something
+                  [if something] -> Unknown
+                  -> END`;
 
-    const lines = textToLines(text);
-    expect(lines).toHaveLength(6);
+    const lines = textToLines(text, nodes);
+    expect(lines).toHaveLength(11);
 
-    const [if1, if2, blank1, mutation, blank2, plain] = lines;
+    const [if1, if2, blank1, mutation, blank2, plain, blank3, comment, goto, gotoBad, gotoEnd] = lines;
     expect(if1.condition).toBe("metLilly=0");
     expect(if1.character).toBe("Lilly");
     expect(if1.dialogue).toBe("Hi, I'm Lilly.");
@@ -47,12 +62,22 @@ describe("Parser", () => {
 
     expect(plain.character).toBe("Lilly");
     expect(plain.dialogue).toBe("What can I do for you?");
+
+    expect(comment.comment).toBe("Comment line");
+
+    expect(goto.goToNodeName).toBe("Something");
+    expect(goto.goToNodeId).toBe(nodes[0].id);
+
+    expect(gotoBad.goToNodeId).toBeNull();
+
+    expect(gotoEnd.goToNodeId).toBeNull();
+    expect(gotoEnd.goToNodeName).toBe("END");
   });
 
   it("can convert node lines to text", () => {
     expect.hasAssertions();
 
-    const lines: INodeLine[] = [
+    const lines: Array<INodeLine> = [
       {
         id: uuid(),
         condition: "metLilly=0",
@@ -77,6 +102,16 @@ describe("Parser", () => {
         id: uuid(),
         character: "Lilly",
         dialogue: "What can I do for you?"
+      },
+      {
+        id: uuid(),
+        comment: "Comment line"
+      },
+      {
+        id: uuid(),
+        condition: "something",
+        goToNodeId: uuid(),
+        goToNodeName: "Something"
       }
     ];
 
@@ -89,25 +124,27 @@ describe("Parser", () => {
     expect(text).toContain(`\n\n`);
     expect(text).toContain(`[do metLilly=1]`);
     expect(text).toContain(`Lilly: What can I do for you?`);
+    expect(text).toContain("# Comment line");
+    expect(text).toContain(`[if something] -> Something`);
   });
 
-  it("can convert text to node options", () => {
+  it("can convert text to node responses", () => {
     expect.hasAssertions();
 
-    const nodes: INode[] = [
+    const nodes: Array<INode> = [
       {
         id: uuid(),
         name: "first",
         updatedAt: null,
         lines: [],
-        options: []
+        responses: []
       },
       {
         id: uuid(),
         name: "second",
         updatedAt: null,
         lines: [],
-        options: []
+        responses: []
       }
     ];
 
@@ -118,80 +155,80 @@ describe("Parser", () => {
 
                   Nothing for now.`;
 
-    const options = textToOptions(text, nodes);
-    expect(options).toHaveLength(5);
+    const responses = textToResponses(text, nodes);
+    expect(responses).toHaveLength(5);
 
-    const [conditional1, conditional2, plain, unknown, ending] = options;
+    const [conditional1, conditional2, plain, unknown, ending] = responses;
     expect(conditional1.condition).toBe("metLilly=0");
     expect(conditional1.prompt).toBe("What's your name?");
-    expect(conditional1.nextNodeId).toBe(nodes[0].id);
+    expect(conditional1.goToNodeId).toBe(nodes[0].id);
 
     expect(conditional2.condition).toBe("metLilly=1");
     expect(conditional2.prompt).toBe("Hi Lilly.");
-    expect(conditional2.nextNodeName).toBe("hello");
-    expect(conditional2.nextNodeId).toBeNull();
+    expect(conditional2.goToNodeName).toBe("hello");
+    expect(conditional2.goToNodeId).toBeNull();
 
     expect(plain.prompt).toBe("I'm hungry.");
-    expect(plain.nextNodeId).toBe(nodes[1].id);
+    expect(plain.goToNodeId).toBe(nodes[1].id);
 
     expect(unknown.prompt).toBe("I don't know.");
-    expect(unknown.nextNodeName).toBe("unknown");
-    expect(unknown.nextNodeId).toBeNull();
+    expect(unknown.goToNodeName).toBe("unknown");
+    expect(unknown.goToNodeId).toBeNull();
 
     expect(ending.prompt).toBe("Nothing for now.");
-    expect(ending.nextNodeName).toBe("END");
-    expect(ending.nextNodeId).toBeNull();
+    expect(ending.goToNodeName).toBe("END");
+    expect(ending.goToNodeId).toBeNull();
   });
 
-  it("can convert node options to text", () => {
+  it("can convert node responses to text", () => {
     expect.hasAssertions();
 
-    const nodes: INode[] = [
+    const nodes: Array<INode> = [
       {
         id: uuid(),
         name: "first",
         updatedAt: null,
         lines: [],
-        options: []
+        responses: []
       },
       {
         id: uuid(),
         name: "second",
         updatedAt: null,
         lines: [],
-        options: []
+        responses: []
       }
     ];
 
-    const options: INodeOption[] = [
+    const responses: Array<INodeResponse> = [
       {
         id: uuid(),
         condition: "metLilly=0",
         prompt: "What's your name?",
-        nextNodeId: nodes[0].id
+        goToNodeId: nodes[0].id
       },
       {
         id: uuid(),
         prompt: "I'm hungry.",
-        nextNodeId: nodes[1].id
+        goToNodeId: nodes[1].id
       },
       {
         id: uuid(),
         prompt: "I don't know.",
-        nextNodeName: "unknown"
+        goToNodeName: "unknown"
       },
       {
         id: uuid(),
         prompt: "Nothing for now.",
-        nextNodeName: "END",
-        nextNodeId: null
+        goToNodeName: "END",
+        goToNodeId: null
       }
     ];
 
-    expect(optionsToText(null, nodes)).toBe("");
-    expect(optionsToText([{ id: uuid(), nextNodeName: "END" }], nodes)).toBe("-> END");
+    expect(responsesToText(null, nodes)).toBe("");
+    expect(responsesToText([{ id: uuid(), goToNodeName: "END" }], nodes)).toBe("-> END");
 
-    const text = optionsToText(options, nodes);
+    const text = responsesToText(responses, nodes);
 
     expect(text).toContain(`[if metLilly=0] What's your name? -> first`);
     expect(text).toContain(`I'm hungry. -> second`);

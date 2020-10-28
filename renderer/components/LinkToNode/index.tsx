@@ -5,18 +5,18 @@ import useApplication from "../../hooks/useApplication";
 import useNodes from "../../hooks/useNodes";
 import useNodePicker from "../../hooks/useNodePicker";
 
-import { INodeOption, INode } from "../../../types";
+import { INode, INodeLink } from "../../../types";
 
 interface Props {
-  fromOption: INodeOption;
+  from: INodeLink;
 }
 
-export default function LinkToNode({ fromOption }: Props) {
+export default function LinkToNode({ from }: Props) {
   const { selectNode, addNode } = useApplication();
   const { byId } = useNodes();
   const { showNextNodePicker } = useNodePicker();
 
-  const linkedNode = byId[fromOption.nextNodeId];
+  const linkedNode = byId[from.goToNodeId];
 
   function onLinkedNodeClick(event: MouseEvent, node: INode) {
     // Stop clicking a linked node from passing to a click on the node itself
@@ -24,7 +24,7 @@ export default function LinkToNode({ fromOption }: Props) {
     selectNode(node);
   }
 
-  const isEnd = fromOption.nextNodeName === "END";
+  const isEnd = from.goToNodeName === "END";
 
   return (
     <>
@@ -39,12 +39,12 @@ export default function LinkToNode({ fromOption }: Props) {
 
         {!isEnd && !linkedNode && (
           <span className="Text" data-testid="not-found">
-            {fromOption.nextNodeName} doesn't exist.
-            <span role="button" onClick={() => addNode(fromOption)} data-testid="create-button">
-              Create #{fromOption.nextNodeName}
+            {from.goToNodeName} doesn't exist.
+            <span role="button" onClick={() => addNode(from.goToNodeName, from.id)} data-testid="create-button">
+              Create #{from.goToNodeName}
             </span>
             or
-            <span role="button" onClick={() => showNextNodePicker(fromOption)} data-testid="pick-button">
+            <span role="button" onClick={() => showNextNodePicker(from.id)} data-testid="pick-button">
               pick a node...
             </span>
           </span>

@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 
 import { keyBy } from "./util";
-import { INodeLine, INode, INodeOption } from "../../types";
+import { INodeLine, INode, INodeResponse } from "../../types";
 
 class ParsingError extends Error {
   public line: number;
@@ -17,8 +17,10 @@ class ParsingError extends Error {
 /**
  * Parse text into Node lines
  * @param text
+ * @param otherNodes
  */
-export function textToLines(text: string): INodeLine[] {
+export function textToLines(text: string, otherNodes: Array<INode>): Array<INodeLine> {
+  const byName = keyBy("name", otherNodes);
   const lines = [];
 
   text.split("\n").forEach((t, index) => {
@@ -34,8 +36,14 @@ export function textToLines(text: string): INodeLine[] {
         line.dialogue = "";
       }
 
+      // Comment
+      if (t.startsWith("# ")) {
+        line.comment = t.replace("# ", "");
+        t = "";
+      }
+
       // Conditional
-      if (t.includes("[if ")) {
+      if (t.startsWith("[if ")) {
         errorMessage = "Malformed conditional";
         const [match, condition] = t.match(/\[if (.*?)\]/);
         line.condition = condition;
@@ -43,7 +51,7 @@ export function textToLines(text: string): INodeLine[] {
       }
 
       // Mutation
-      if (t.includes("[do ")) {
+      if (t.startsWith("[do ")) {
         errorMessage = "Malformed mutation";
         const [match, mutation] = t.match(/\[do (.*?)\]/);
         line.mutation = mutation;
@@ -55,7 +63,15 @@ export function textToLines(text: string): INodeLine[] {
         const [match, character, dialogue] = t.match(/(.*?):\s?(.*?)$/);
         line.character = character;
         line.dialogue = dialogue;
-        t = t.replace(match, "");
+        t = t.replace(match, "").trim();
+      }
+
+      if (t.includes("->")) {
+        errorMessage = "Malformed redirection";
+        const [match, gotoNodeName] = t.match(/\s?->\s?(.*?)$/);
+        line.goToNodeName = gotoNodeName === "END" ? "END" : gotoNodeName;
+        line.goToNodeId = byName[line.goToNodeName]?.id || null;
+        t = t.replace(match, "").trim();
       }
 
       lines.push(line);
@@ -71,37 +87,40 @@ export function textToLines(text: string): INodeLine[] {
  * Convert lines into editable text
  * @param lines
  */
-export function linesToText(lines: INodeLine[]): string {
+export function linesToText(lines: Array<INodeLine>): string {
   if (!lines) return "";
 
   return lines
     .map(line => {
+      if (line.comment) return `# ${line.comment}`;
       if (line.mutation) return `[do ${line.mutation}]`;
-      if (line.condition) return `[if ${line.condition}] ${line.character}: ${line.dialogue}`;
 
-      if (line.dialogue === "") return "";
+      let s = "";
+      if (line.condition) s = `[if ${line.condition}] `;
+      if (line.dialogue) s += `${line.character}: ${line.dialogue}`;
+      if (line.goToNodeName) s += `-> ${line.goToNodeName}`;
 
-      return `${line.character}: ${line.dialogue}`;
+      return s;
     })
     .join("\n");
 }
 
 /**
- * Convert text into Node options
+ * Convert text into Node responses
  * @param text
  * @param otherNodes
  */
-export function textToOptions(text: string, otherNodes: INode[]): INodeOption[] {
+export function textToResponses(text: string, otherNodes: Array<INode>): Array<INodeResponse> {
   const byName = keyBy("name", otherNodes);
 
-  const options = [];
+  const responses = [];
 
   text.split("\n").forEach((t, index) => {
     let errorMessage = "";
     try {
       t = t.trim();
 
-      const option: INodeOption = {
+      const response: INodeResponse = {
         id: uuid()
       };
 
@@ -112,51 +131,51 @@ export function textToOptions(text: string, otherNodes: INode[]): INodeOption[] 
       if (t.includes("[if ")) {
         errorMessage = "Malformed conditional";
         const [match, condition] = t.match(/\[if (.*?)\]/);
-        option.condition = condition;
+        response.condition = condition;
         t = t.replace(match, "").trim();
       }
 
       // Next node
       if (t.includes("->")) {
-        errorMessage = "Malformed mutation";
-        const [match, nextNodeName] = t.match(/\s?->\s?(.*?)$/);
-        option.nextNodeName = nextNodeName === "END" ? "END" : nextNodeName;
-        option.nextNodeId = byName[option.nextNodeName]?.id || null;
+        errorMessage = "Malformed redirection";
+        const [match, goToNodeName] = t.match(/\s?->\s?(.*?)$/);
+        response.goToNodeName = goToNodeName === "END" ? "END" : goToNodeName;
+        response.goToNodeId = byName[response.goToNodeName]?.id || null;
         t = t.replace(match, "").trim();
       }
       // End of conversation
       else {
-        option.nextNodeId = null;
-        option.nextNodeName = "END";
+        response.goToNodeId = null;
+        response.goToNodeName = "END";
       }
 
       // Anything left is the prompt
-      option.prompt = t;
+      response.prompt = t;
 
-      options.push(option);
+      responses.push(response);
     } catch (error) {
-      throw new ParsingError(errorMessage, index + 1, "options");
+      throw new ParsingError(errorMessage, index + 1, "responses");
     }
   });
 
-  return options;
+  return responses;
 }
 
 /**
- * Convert Node options to editable text
- * @param options
+ * Convert Node responses to editable text
+ * @param responses
  * @param otherNodes
  */
-export function optionsToText(options: INodeOption[], otherNodes: INode[]): string {
-  if (!options) return "";
+export function responsesToText(responses: Array<INodeResponse>, otherNodes: Array<INode>): string {
+  if (!responses) return "";
 
   const byId = keyBy("id", otherNodes);
-  return options
-    .map(option => {
-      const name = byId[option.nextNodeId]?.name || option.nextNodeName;
+  return responses
+    .map(response => {
+      const name = byId[response.goToNodeId]?.name || response.goToNodeName;
 
-      if (option.condition) return `[if ${option.condition}] ${option.prompt} -> ${name}`;
-      if (option.prompt) return `${option.prompt} -> ${name}`;
+      if (response.condition) return `[if ${response.condition}] ${response.prompt} -> ${name}`;
+      if (response.prompt) return `${response.prompt} -> ${name}`;
 
       return `-> ${name}`;
     })

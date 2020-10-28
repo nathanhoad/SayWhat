@@ -3,10 +3,10 @@ import { createContext, useState, useContext } from "react";
 import NodePicker from "../../components/NodePicker";
 import useApplication from "../useApplication";
 
-import { INode, INodeOption } from "../../../types";
+import { INode } from "../../../types";
 
 interface INodePickerContext {
-  showNextNodePicker: (option: INodeOption) => void;
+  showNextNodePicker: (fromId: string) => void;
   isPickingNextNode: boolean;
 }
 
@@ -23,30 +23,30 @@ export function NodePickerProvider({ children }: INodePickerProviderProps) {
   const { selectedSequence, connectNodes } = useApplication();
 
   const [isPickingNextNode, setIsPickingNextNode] = useState(false);
-  const [pickingTarget, setPickingTarget] = useState<INodeOption>(null);
+  const [pickingTargetId, setPickingTargetId] = useState<string>(null);
 
   /**
-   * Show the node picker
-   * @param option
+   * Show the node picker and remember the target that we are coming from
+   * @param fromId
    */
-  async function showNextNodePicker(option: INodeOption) {
+  async function showNextNodePicker(fromId: string) {
     setIsPickingNextNode(true);
-    setPickingTarget(option);
+    setPickingTargetId(fromId);
   }
 
   /**
    * Close the node picker and attach that node to the target
-   * @param toNode
-   * @param option
+   * @param node
+   * @param fromId
    */
-  async function pickNextNode(toNode: INode, option?: INodeOption) {
-    const fromOption = pickingTarget ?? option;
-    if (toNode && fromOption) {
-      connectNodes(fromOption, toNode);
+  async function pickNextNode(node: INode, fromId?: string) {
+    fromId = pickingTargetId ?? fromId;
+    if (node && fromId) {
+      connectNodes(fromId, node.id);
     }
 
     setIsPickingNextNode(false);
-    setPickingTarget(null);
+    setPickingTargetId(null);
   }
 
   return (

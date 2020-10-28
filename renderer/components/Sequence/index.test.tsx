@@ -1,6 +1,10 @@
 import { render, fireEvent } from "@testing-library/react";
 
+import { INode, ISequence } from "../../../types";
+
 import Sequence from ".";
+
+jest.useFakeTimers();
 
 let mockHasUnsavedChanges = false;
 const mockOpenSequenceList = jest.fn();
@@ -8,8 +12,8 @@ const mockEditSequence = jest.fn();
 const mockRemoveSequence = jest.fn();
 const mockSelectNode = jest.fn();
 const mockAddNode = jest.fn();
-let mockSelectedSequence = null;
-let mockSelectedNode = null;
+let mockSelectedSequence: ISequence = null;
+let mockSelectedNode: INode = null;
 jest.mock("../../hooks/useApplication", () => {
   return () => ({
     userInterface: {
@@ -31,11 +35,9 @@ jest.mock("../NodeList", () => {
 
 describe("Sequence", () => {
   const realQuerySelector = document.querySelector;
-  const realSetTimeout = window.setTimeout;
 
   afterAll(() => {
     document.querySelector = realQuerySelector;
-    window.setTimeout = realSetTimeout;
   });
 
   it("renders with no selected sequence", () => {
@@ -52,6 +54,8 @@ describe("Sequence", () => {
 
     mockHasUnsavedChanges = true;
     mockSelectedSequence = {
+      id: "sequenceId",
+      updatedAt: null,
       name: "Test Sequence",
       nodes: []
     };
@@ -96,6 +100,8 @@ describe("Sequence", () => {
     mockAddNode.mockReset();
 
     mockSelectedSequence = {
+      id: "sequenceId",
+      updatedAt: null,
       name: "Test Sequence",
       nodes: []
     };
@@ -109,6 +115,8 @@ describe("Sequence", () => {
     expect.hasAssertions();
 
     mockSelectedSequence = {
+      id: "sequenceId",
+      updatedAt: null,
       name: "Test Sequence",
       nodes: [
         {
@@ -116,7 +124,7 @@ describe("Sequence", () => {
           name: "Node 1",
           updatedAt: null,
           lines: [],
-          options: []
+          responses: []
         }
       ]
     };
@@ -132,6 +140,8 @@ describe("Sequence", () => {
     expect.hasAssertions();
 
     mockSelectedSequence = {
+      id: "sequenceId",
+      updatedAt: null,
       name: "Test Sequence",
       nodes: [
         {
@@ -139,23 +149,20 @@ describe("Sequence", () => {
           name: "Node 1",
           updatedAt: null,
           lines: [],
-          options: []
+          responses: []
         }
       ]
     };
     const mockScrollIntoView = jest.fn();
-
-    const mockSetTimeout = jest.fn() as any;
-    mockSetTimeout.__promisify__ = (ms: number) => Promise.resolve();
-    window.setTimeout = mockSetTimeout;
 
     // Initially the node cannot be found
     document.querySelector = (query: string) => null;
     mockSelectedNode = mockSelectedSequence.nodes[0];
     const { rerender } = render(<Sequence />);
 
-    expect(mockSetTimeout).toHaveBeenCalled();
     expect(mockScrollIntoView).not.toHaveBeenCalled();
+
+    jest.runOnlyPendingTimers();
 
     // And now the node can be found
     const el = document.createElement("div");

@@ -18,7 +18,7 @@ export function plural(count: number, word: string, plural: string = null): stri
  * @param key
  * @param array
  */
-export function keyBy<T>(key: string, array: T[]): { [key: string]: T } {
+export function keyBy<T>(key: string, array: Array<T>): { [key: string]: T } {
   if (!array) return {};
 
   const map: any = {};
@@ -34,7 +34,7 @@ export function keyBy<T>(key: string, array: T[]): { [key: string]: T } {
  * @param key
  * @param array
  */
-export function sortBy(key: string, array: any[]) {
+export function sortBy(key: string, array: Array<any>) {
   return [...array].sort((a: any, b: any) => {
     if (a[key] < b[key]) return -1;
     if (a[key] > b[key]) return 1;
@@ -47,12 +47,31 @@ export function sortBy(key: string, array: any[]) {
  * @param targetNode
  * @param nodes
  */
-export function findLinksToNode(targetNode: INode, nodes: INode[]): string[] {
+export function findLinksToNode(targetNode: INode, nodes: Array<INode>): Array<string> {
   if (!targetNode || !nodes) return [];
 
   return nodes.reduce((links, node) => {
-    return links.concat(node.options.filter(o => o.nextNodeId === targetNode.id).map(o => o.id));
+    const lines = node.lines.filter(o => o.goToNodeId === targetNode.id).map(o => o.id);
+    const responses = node.responses.filter(o => o.goToNodeId === targetNode.id).map(o => o.id);
+
+    return links.concat(lines, responses);
   }, []);
+}
+
+/**
+ * Get a list of everything that links out of a node
+ * @param node
+ */
+export function findLinksFromNode(node: INode): Array<{ fromId: string; toId: string }> {
+  if (!node) return [];
+
+  return node.lines
+    .concat(node.responses)
+    .filter(l => l.goToNodeId)
+    .map(item => ({
+      fromId: item.id,
+      toId: item.goToNodeId
+    }));
 }
 
 /**
@@ -60,7 +79,7 @@ export function findLinksToNode(targetNode: INode, nodes: INode[]): string[] {
  * @param filter
  * @param nodes
  */
-export function filterNodes(filter: string, nodes: INode[]): INode[] {
+export function filterNodes(filter: string, nodes: Array<INode>): Array<INode> {
   if (!nodes) return [];
 
   const f = filter.toLowerCase();
@@ -75,17 +94,18 @@ export function filterNodes(filter: string, nodes: INode[]): INode[] {
         if (line.dialogue?.toLowerCase().includes(f)) return true;
         if (line.condition?.toLowerCase().includes(f)) return true;
         if (line.mutation?.toLowerCase().includes(f)) return true;
+        if (line.goToNodeName?.toLowerCase().includes(f)) return true;
         return false;
       })
     )
       return true;
 
-    // Options
+    // Responses
     if (
-      node.options.find(option => {
-        if (option.condition?.toLowerCase().includes(f)) return true;
-        if (option.prompt?.toLowerCase().includes(f)) return true;
-        if (option.nextNodeName.toLowerCase().includes(f)) return true;
+      node.responses.find(response => {
+        if (response.condition?.toLowerCase().includes(f)) return true;
+        if (response.prompt?.toLowerCase().includes(f)) return true;
+        if (response.goToNodeName.toLowerCase().includes(f)) return true;
         return false;
       })
     )
@@ -97,16 +117,19 @@ export function filterNodes(filter: string, nodes: INode[]): INode[] {
 }
 
 /**
- * Get a hash of every option id that points to its node
+ * Get a hash of every line/response id that points to its node
  * @param nodes
  */
-export function getNodesByOptionId(nodes: INode[]): { [id: string]: INode } {
+export function getNodesByChildId(nodes: Array<INode>): { [id: string]: INode } {
   if (!nodes) return {};
 
   const list = {};
   nodes.forEach(node => {
-    node.options.forEach(option => {
-      list[option.id] = node;
+    node.lines.forEach(line => {
+      list[line.id] = node;
+    });
+    node.responses.forEach(response => {
+      list[response.id] = node;
     });
   });
 

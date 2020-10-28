@@ -14,7 +14,7 @@ describe("NodePicker", () => {
         name: "Node 1",
         updatedAt: null,
         lines: [],
-        options: []
+        responses: []
       }
     ];
     const onPickNextNode = jest.fn();

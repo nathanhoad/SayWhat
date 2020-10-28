@@ -1,34 +1,34 @@
 import LinkToNode from "../LinkToNode";
 
-import { INodeOption } from "../../../types";
+import { INodeResponse } from "../../../types";
 
 interface Props {
-  options?: INodeOption[];
+  responses?: Array<INodeResponse>;
 }
 
-export default function Options({ options }: Props) {
+export default function Responses({ responses }: Props) {
   return (
     <>
-      {(options || []).map(option => {
+      {(responses || []).map(response => {
         return (
-          <div key={option.id} id={option.id} className="Option">
-            {option.condition && (
+          <div key={response.id} id={response.id} className="Response">
+            {response.condition && (
               <span className="Condition" data-testid="condition">
-                if {option.condition}
+                if {response.condition}
               </span>
             )}
-            {option.prompt && (
+            {response.prompt && (
               <span className="Prompt" data-testid="prompt">
-                {option.prompt}
+                {response.prompt}
               </span>
             )}
-            <LinkToNode fromOption={option} />
+            <LinkToNode from={response} />
           </div>
         );
       })}
 
       <style jsx>{`
-        .Option {
+        .Response {
           margin-bottom: 0.1rem;
           display: flex;
           margin-bottom: 0.4rem;
