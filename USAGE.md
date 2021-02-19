@@ -45,7 +45,7 @@ You can see a nice demo of usage, using godot, [here](https://youtu.be/mmUxl46h2
 All lines can be either `<CHARACTER>: message`, where `<CHARACTER>` is the name of the person talking. Commands (`if` / `do`) are run in the context of you rscene/class, so use your Godot scene to define variables and action-methods (for `do`.) Choices go in the bottom-section, 
 
 - `[if CONDITION]` - Test for a condition before calling the dialog
-- `[do ACTION (param, param, param...)]` - Run method or assign directly (like `[do cool=1]`])
+- `[do ACTION param param param...]` - Run method or assign directly (like `[do cool=1]`])
 - `<TEXT> -> action` - a choice. The choice can also be `END` to end the node.
 - `# comment` - keep comments for yourself
 
