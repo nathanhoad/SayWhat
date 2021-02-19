@@ -28,7 +28,7 @@ The idea would be that you can request an entry point and then just step through
 
 ## The Language
 
-SayWhat has it's own [DSL](https://en.wikipedia.org/wiki/Domain-specific_language), that is unconcered with how you will be using it. This means with one editor & language, you can edit the dialogs for any game engine/framework (aslong as you setup a loader on tat end.)
+SayWhat has it's own [DSL](https://en.wikipedia.org/wiki/Domain-specific_language), that is unconcerned with how you will be using it. This means with one editor & language, you can edit the dialogs for any game engine/framework (as long as you setup a loader on tat end.)
 
 ### Bindings
 
@@ -38,7 +38,7 @@ You can see a nice demo of usage, using Godot, [here](https://youtu.be/mmUxl46h2
 
 ### API
 
-All lines can be either `<CHARACTER>: message`, where `<CHARACTER>` is the name of the person talking. Commands (`if` / `do`) are run in the context of you rscene/class, so use your Godot scene to define variables and action-methods (for `do`.) Choices go in the bottom-section, 
+All lines can be either `<CHARACTER>: message`, where `<CHARACTER>` is the name of the person talking. Commands (`if` / `do`) are run in the context of your scene/class, so use your Godot scene to define variables and action-methods (for `do`.) Choices go in the bottom-section, 
 
 - `[if CONDITION]` - Test for a condition before calling the dialog
 - `[do ACTION param param param...]` - Run method or assign directly (like `[do cool=1]`])
