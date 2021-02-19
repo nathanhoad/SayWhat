@@ -32,13 +32,9 @@ SayWhat has it's own [DSL](https://en.wikipedia.org/wiki/Domain-specific_languag
 
 ### Bindings
 
-SayWHat has bindings for a few games/frameworks. You will still need to set up how it is displayed, but these will get you started 
+SayWhat has currently only has ready-made [bindings for Godot](https://github.com/nathanhoad/saywhat_godot), but the format is simple enough you should be abel to use it with anything, using JSON/XML. Even with the [Godot bindings](https://github.com/nathanhoad/saywhat_godot), you will still need to set up how it is displayed, but it makes it much easier to use.
 
-- [Godot](https://github.com/nathanhoad/saywhat_godot)
-
-> **TODO**: Add more here
-
-You can see a nice demo of usage, using godot, [here](https://youtu.be/mmUxl46h24M)
+You can see a nice demo of usage, using Godot, [here](https://youtu.be/mmUxl46h24M)
 
 ### API
 
@@ -63,4 +59,4 @@ Can you repeat that? -> Start
 That's all for now -> END
 ```
 
-So here, you name it `Start`, and it will print message `Hello!` from `Character`. if your `GODOT_SCENE.has_met_character` is truthy, it will print `It's nice to meet you.`. It has a comment, and sets `GODOT_SCENE.has_met_character` to `true`. After that it has a choice, with 2 options, to either go back to `Start` (loop) or `END` to stop the dialogue.
+So here, you name it `Start`, and it will print message `Hello!` from `Character`. if your `GODOT_SCENE.has_met_character` is not truthy, it will print `It's nice to meet you.`. It has a comment, and sets `GODOT_SCENE.has_met_character` to `true`. After that it has a choice, with 2 options, to either go back to `Start` (loop) or `END` to stop the dialogue.
