@@ -40,6 +40,7 @@ You can see a nice demo of usage, using Godot, [here](https://youtu.be/mmUxl46h2
 
 All lines can be either `<CHARACTER>: message`, where `<CHARACTER>` is the name of the person talking. Commands (`if` / `do`) are run in the context of your scene/class, so use your Godot scene to define variables and action-methods (for `do`.) Choices go in the bottom-section, 
 
+- `<CHARACTER>: message` - Say something as `CHARACTER`
 - `[if CONDITION]` - Test for a condition before calling the dialog
 - `[do ACTION param param param...]` - Run method or assign directly (like `[do cool=1]`])
 - `<TEXT> -> action` - a choice. The choice can also be `END` to end the node.
