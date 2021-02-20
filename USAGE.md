@@ -16,7 +16,6 @@ Any line or prompt can have a condition attached. Conditions call out to the eng
 
 Mutations call out to the engine and affect state. For example, a character might say "Here, have this thing" and then the engine could run a 'GiveThing' mutation which runs an animation and then updates the character's inventory before continuing the dialogue flow. Think of these as the individual events that happen in a scene, in a script.
 
-
 ### Exporting
 
 The app has exports to XML and JSON, and Godot resource file ().
@@ -24,7 +23,6 @@ The app has exports to XML and JSON, and Godot resource file ().
 Both formats simply list out every line and group of responses as their own nodes (per sequence/scene). Each node in this context then points to the next node by a generated ID.
 
 The idea would be that you can request an entry point and then just step through each line.
-
 
 ## The Language
 
@@ -34,11 +32,11 @@ SayWhat has it's own [DSL](https://en.wikipedia.org/wiki/Domain-specific_languag
 
 SayWhat has currently only has ready-made [bindings for Godot](https://github.com/nathanhoad/saywhat_godot), but the format is simple enough you should be abel to use it with anything, using JSON/XML. Even with the [Godot bindings](https://github.com/nathanhoad/saywhat_godot), you will still need to set up how it is displayed, but it makes it much easier to use.
 
-You can see a nice demo of usage, using Godot, [here](https://youtu.be/mmUxl46h24M)
+An example of usage for Godot can be seen in [this video](https://youtu.be/mmUxl46h24M) or in [this example project](https://github.com/nathanhoad/saywhat_godot_example).
 
 ### API
 
-All lines can be either `<CHARACTER>: message`, where `<CHARACTER>` is the name of the person talking. Commands (`if` / `do`) are run in the context of your scene/class, so use your Godot scene to define variables and action-methods (for `do`.) Choices go in the bottom-section, 
+All lines can be either `<CHARACTER>: message`, where `<CHARACTER>` is the name of the person talking. Commands (`if` / `do`) are run in the context of your scene/class, so use your Godot scene to define variables and action-methods (for `do`.) Choices go in the bottom-section,
 
 - `<CHARACTER>: message` - Say something as `CHARACTER`
 - `[if CONDITION]` - Test for a condition before calling the dialog
