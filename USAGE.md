@@ -26,11 +26,11 @@ The idea would be that you can request an entry point and then just step through
 
 ## The Language
 
-SayWhat has it's own [DSL](https://en.wikipedia.org/wiki/Domain-specific_language), that is unconcerned with how you will be using it. This means with one editor & language, you can edit the dialogs for any game engine/framework (as long as you setup a loader on tat end.)
+SayWhat has it's own [DSL](https://en.wikipedia.org/wiki/Domain-specific_language), that is unconcerned with how you will be using it. This means with one editor & language, you can edit the dialogs for any game engine/framework (as long as you setup a loader on that end.)
 
 ### Bindings
 
-SayWhat has currently only has ready-made [bindings for Godot](https://github.com/nathanhoad/saywhat_godot), but the format is simple enough you should be abel to use it with anything, using JSON/XML. Even with the [Godot bindings](https://github.com/nathanhoad/saywhat_godot), you will still need to set up how it is displayed, but it makes it much easier to use.
+SayWhat currently only has ready-made [bindings for Godot](https://github.com/nathanhoad/saywhat_godot), but the format is simple enough you should be able to use it with anything, using JSON/XML. Even with the [Godot bindings](https://github.com/nathanhoad/saywhat_godot), you will still need to set up how it is displayed, but it makes it much easier to use.
 
 An example of usage for Godot can be seen in [this video](https://youtu.be/mmUxl46h24M) or in [this example project](https://github.com/nathanhoad/saywhat_godot_example).
 
@@ -50,7 +50,8 @@ All lines can be either `<CHARACTER>: message`, where `<CHARACTER>` is the name 
 
 ```
 Character: Hello!
-[if has_met_character] Character: It's nice to meet you.
+[if !has_met_character] Character: It's nice to meet you.
+
 # This is a comment
 [do has_met_character = true]
 
